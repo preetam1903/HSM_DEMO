@@ -341,6 +341,14 @@ if st.button("Investigate"):
 
                     show_agent(completed, "Running")
 
+# -------------------------
+# Execute Trend Agent
+# -------------------------
+
+                    if completed == "Trend Agent":
+
+                        trend_agent(coil_df)
+
                     break
 
                 show_agent(completed, "Completed")
@@ -354,5 +362,92 @@ if st.button("Investigate"):
             show_agent(completed, "Completed")
 
     st.success("Investigation Planning Completed")
+
+def trend_agent(coil_df):
+
+    st.subheader("📈 Trend Agent")
+
+    status = st.empty()
+
+    status.info("Reading production data...")
+
+    df = coil_df.copy()
+
+    weekly = (
+        df.groupby("WEEK_NO")
+        .agg(
+            Production=("COIL_ID","count"),
+            Tonnage=("COIL_WEIGHT_TON","sum")
+        )
+        .reset_index()
+    )
+
+    status.success("Weekly production calculated")
+
+    st.write("### Generated Pandas")
+
+    st.code(
+"""
+weekly = (
+    coil_df.groupby("WEEK_NO")
+    .agg(
+        Production=("COIL_ID","count"),
+        Tonnage=("COIL_WEIGHT_TON","sum")
+    )
+    .reset_index()
+)
+"""
+)
+
+    st.write("### Evidence")
+
+    st.dataframe(
+        weekly,
+        use_container_width=True
+    )
+
+    first = weekly.iloc[0]["Production"]
+
+    last = weekly.iloc[-1]["Production"]
+
+    change = (
+        (last-first)
+        /first
+    )*100
+
+    st.write("### Calculation")
+
+    st.write(
+
+        f"""
+First Week Production : **{first} coils**
+
+Last Week Production : **{last} coils**
+
+Percentage Change :
+
+(({last}-{first})/{first})×100
+
+= **{change:.2f}%**
+"""
+    )
+
+    if change<0:
+
+        finding=f"""
+Production reduced by **{abs(change):.2f}%**
+over the last three weeks.
+"""
+
+    else:
+
+        finding=f"""
+Production increased by **{change:.2f}%**
+over the last three weeks.
+"""
+
+    st.success(finding)
+
+    return weekly
 
     
