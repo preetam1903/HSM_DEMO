@@ -392,7 +392,11 @@ def show_agent(agent_name, status="Waiting"):
     )
 ###########################
 
-def trend_agent(coil_df):
+# ==========================================================
+# TREND AGENT
+# ==========================================================
+
+def trend_agent(coil_df, plan):
 
     st.subheader("📈 Trend Agent")
 
@@ -401,14 +405,36 @@ def trend_agent(coil_df):
 
     df = coil_df.copy()
 
+    # ---------------------------------------
     # Create Week Number
-    df["WEEK_NO"] = pd.to_datetime(df["PROD_DATE"]).dt.isocalendar().week
+    # ---------------------------------------
+
+    df["WEEK_NO"] = (
+        pd.to_datetime(df["PROD_DATE"])
+        .dt.isocalendar()
+        .week
+        .astype(int)
+    )
+
+    # ---------------------------------------
+    # Filter Investigation Weeks
+    # ---------------------------------------
+
+    if len(plan["weeks"]) > 0:
+
+        df = df[
+            df["WEEK_NO"].isin(plan["weeks"])
+        ]
+
+    # ---------------------------------------
+    # Weekly Aggregation
+    # ---------------------------------------
 
     weekly = (
         df.groupby("WEEK_NO")
         .agg(
-            Production=("MAT_ID", "count"),
-            Tonnage=("COIL_WEIGHT_TON", "sum")
+            Production=("MAT_ID","count"),
+            Tonnage=("COIL_WEIGHT_TON","sum")
         )
         .reset_index()
         .sort_values("WEEK_NO")
@@ -416,45 +442,129 @@ def trend_agent(coil_df):
 
     status.success("Weekly production calculated")
 
+    # ---------------------------------------
+    # Generated Query
+    # ---------------------------------------
+
     st.write("### Generated Pandas Query")
 
-    st.code("""
+    st.code(
+"""
 df["WEEK_NO"] = pd.to_datetime(df["PROD_DATE"]).dt.isocalendar().week
 
 weekly = (
-    df.groupby("WEEK_NO")
+    df[df["WEEK_NO"].isin(selected_weeks)]
+      .groupby("WEEK_NO")
       .agg(
-          Production=("MAT_ID","count"),
-          Tonnage=("COIL_WEIGHT_TON","sum")
+            Production=("MAT_ID","count"),
+            Tonnage=("COIL_WEIGHT_TON","sum")
       )
       .reset_index()
 )
-""")
+"""
+    )
+
+    # ---------------------------------------
+    # Evidence
+    # ---------------------------------------
 
     st.write("### Weekly Production")
 
-    st.dataframe(weekly, use_container_width=True)
+    st.dataframe(
+        weekly,
+        use_container_width=True
+    )
+
+    # ---------------------------------------
+    # Week-on-Week Calculation
+    # ---------------------------------------
+
+    weekly["WoW_%"] = (
+        weekly["Production"]
+        .pct_change()*100
+    )
+
+    st.write("### Week-on-Week Trend")
+
+    st.dataframe(
+        weekly.round(2),
+        use_container_width=True
+    )
+
+    # ---------------------------------------
+    # Trend Chart
+    # ---------------------------------------
+
+    chart = (
+        weekly
+        .set_index("WEEK_NO")["Production"]
+    )
+
+    st.line_chart(chart)
+
+    # ---------------------------------------
+    # Overall Reduction
+    # ---------------------------------------
 
     first = weekly.iloc[0]["Production"]
     last = weekly.iloc[-1]["Production"]
 
-    pct = ((last - first) / first) * 100
+    overall = (
+        (last-first)
+        /first
+    )*100
 
     st.metric(
-        "Production Change",
-        f"{pct:.2f}%"
+        "Overall Production Change",
+        f"{overall:.2f}%"
     )
 
-    if pct < 0:
-        st.success(
-            f"Production reduced by {abs(pct):.2f}% over the selected period."
-        )
-    else:
-        st.success(
-            f"Production increased by {pct:.2f}% over the selected period."
+    # ---------------------------------------
+    # Finding
+    # ---------------------------------------
+
+    if overall < 0:
+
+        finding = (
+            f"""
+Production reduced by **{abs(overall):.2f}%**
+
+Week {int(weekly.iloc[0]['WEEK_NO'])}
+↓
+
+Week {int(weekly.iloc[-1]['WEEK_NO'])}
+
+The reduction was continuous across the
+selected investigation period.
+"""
         )
 
-    return weekly
+    elif overall > 0:
+
+        finding = (
+            f"""
+Production increased by **{overall:.2f}%**
+during the investigation period.
+"""
+        )
+
+    else:
+
+        finding = (
+            "Production remained stable."
+        )
+
+    st.success(finding)
+
+    return {
+
+        "weekly": weekly,
+
+        "overall_change": overall,
+
+        "finding": finding
+
+    }
 
 # ==========================================================
 # EVENT AGENT
