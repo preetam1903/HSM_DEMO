@@ -835,7 +835,7 @@ if st.button("Investigate"):
                 context_agent(plan)
 
             elif agent == "Trend Agent":
-                trend_agent(coil_df)
+                trend_result = trend_agent(coil_df, plan)
 
             elif agent == "Event Agent":
                 event_agent(events_df)
