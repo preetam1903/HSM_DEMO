@@ -355,22 +355,4 @@ if st.button("Investigate"):
 
     st.success("Investigation Planning Completed")
 
-    plan=planner_agent(question)
-
-    st.divider()
-
-    st.subheader("Investigation Planner")
-
-    st.write(f"**Intent :** {plan['intent']}")
-
-    st.write(f"**Primary KPI :** {plan['primary_kpi']}")
-
-    st.write("### Planned Agents")
-
-    for agent in plan["agents"]:
-
-        show_agent(agent)
-
-    st.success("✅ Planner Agent Completed")
-
-    st.info("Trend Agent will be connected in Part 2.")
+    
