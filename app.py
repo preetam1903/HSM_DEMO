@@ -371,6 +371,129 @@ weekly = (
 
     return weekly
 
+# ==========================================================
+# EVENT AGENT
+# ==========================================================
+
+def event_agent(events_df):
+
+    st.subheader("🛠️ Event Agent")
+
+    status = st.empty()
+
+    status.info("Reading manufacturing events...")
+
+    df = events_df.copy()
+
+    st.write("### Generated Pandas Query")
+
+    st.code("""
+events_df.sort_values("EVENT_DATE")
+""")
+
+    df = df.sort_values("EVENT_DATE")
+
+    st.write("### Manufacturing Events")
+
+    st.dataframe(
+        df,
+        use_container_width=True
+    )
+
+    major_events = df[
+        df["EVENT_TYPE"].isin(
+            [
+                "Maintenance",
+                "Breakdown",
+                "Power Failure",
+                "High Priority Order"
+            ]
+        )
+    ]
+
+    status.success("Events analysed")
+
+    st.write("### Evidence")
+
+    st.dataframe(
+        major_events,
+        use_container_width=True
+    )
+
+    if len(major_events):
+
+        finding = (
+            f"{len(major_events)} significant manufacturing events "
+            "were detected during the investigation period."
+        )
+
+    else:
+
+        finding = "No significant manufacturing events detected."
+
+    st.success(finding)
+
+    return major_events
+
+# ==========================================================
+# INVENTORY AGENT
+# ==========================================================
+
+def inventory_agent(inventory_df):
+
+    st.subheader("📦 Inventory Agent")
+
+    status = st.empty()
+
+    status.info("Reading inventory snapshot...")
+
+    df = inventory_df.copy()
+
+    st.write("### Generated Pandas Query")
+
+    st.code("""
+inventory_df.groupby("LOCATION")["COIL_COUNT"].sum()
+""")
+
+    inventory = (
+        df.groupby("LOCATION")
+        .agg(
+            Total_Coils=("COIL_COUNT","sum")
+        )
+        .reset_index()
+        .sort_values(
+            "Total_Coils",
+            ascending=False
+        )
+    )
+
+    status.success("Inventory analysed")
+
+    st.write("### Inventory by Location")
+
+    st.dataframe(
+        inventory,
+        use_container_width=True
+    )
+
+    highest = inventory.iloc[0]
+
+    finding = f"""
+Highest inventory observed at
+
+**{highest['LOCATION']}**
+
+with
+
+**{highest['Total_Coils']} coils**
+
+This may indicate downstream congestion.
+"""
+
+    st.success(finding)
+
+    return inventory
+
 
 # ==========================================================
 # ASK EXECUTIVE
@@ -416,6 +539,12 @@ if st.button("Investigate"):
                     if completed == "Trend Agent":
 
                         trend_agent(coil_df)
+                    if completed == "Event Agent":
+
+                        event_agent(events_df)
+                    if completed == "Inventory Agent":
+
+                        inventory_agent(inventory_df)
 
                     break
 
