@@ -257,21 +257,28 @@ st.write(
 # LOAD AI MODEL
 # -------------------
 
-@st.cache_resource
-def load_model():
+@st.cache_data
+def load_data():
 
-    llm = ChatOpenAI(
-        model="gpt-4.1-mini",
-        temperature=0,
-        api_key=os.getenv(
-            "OPENAI_API_KEY"
-        )
+    coil_df = pd.read_excel("COIL_OPERATION_FACT.xlsx")
+
+    inventory_df = pd.read_excel("INVENTORY_SNAPSHOT.xlsx")
+
+    events_df = pd.read_excel("MANUFACTURING_EVENTS.xlsx")
+
+    kpi_df = pd.read_excel("KPI_METADATA.xlsx")
+
+    relationship_df = pd.read_excel("KPI_RELATIONSHIPS.xlsx")
+
+    coil_df["PROD_DATE"] = pd.to_datetime(coil_df["PROD_DATE"])
+
+    return (
+        coil_df,
+        inventory_df,
+        events_df,
+        kpi_df,
+        relationship_df
     )
-
-    return llm
-
-
-llm = load_model()
 # -------------------
 # LOAD DATA
 # -------------------
@@ -332,7 +339,7 @@ def load_data():
         material_flow_df
     )
 
-production_df, master_df, material_flow_df = load_data()
+coil_df, inventory_df, events_df, kpi_df, relationship_df = load_data()
 
 
 # -------------------
