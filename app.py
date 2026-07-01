@@ -716,8 +716,11 @@ if st.button("Investigate"):
         with agent_box:
 
             show_agent(agent, "Running")
+            if agent == "Planner Agent":
 
-            if agent == "Context Agent":
+                planner_display(plan)
+
+            elif agent == "Context Agent":
 
                 context_agent(plan)
 
