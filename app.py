@@ -390,6 +390,83 @@ def planner_agent(question: str):
         "primary_kpi": "Unknown",
         "agents": []
     }
+# ==========================================================
+# TREND AGENT
+# ==========================================================
+
+def trend_agent(coil_df):
+
+    st.info("🟢 Trend Agent : Reading production data...")
+
+    df = coil_df.copy()
+
+    # Weekly production
+    weekly = (
+        df.groupby("WEEK_NO")["COIL_WEIGHT_TON"]
+        .sum()
+        .reset_index()
+        .sort_values("WEEK_NO")
+    )
+
+    st.write("### Generated Pandas Query")
+
+    st.code(
+        'coil_df.groupby("WEEK_NO")["COIL_WEIGHT_TON"].sum().reset_index()',
+        language="python"
+    )
+
+    st.write("### Weekly Production")
+
+    st.dataframe(weekly, use_container_width=True)
+
+    # Trend Calculation
+    first_week = weekly.iloc[0]["COIL_WEIGHT_TON"]
+    last_week = weekly.iloc[-1]["COIL_WEIGHT_TON"]
+
+    change = last_week - first_week
+
+    pct_change = (change / first_week) * 100
+
+    st.write("### Calculation")
+
+    st.latex(
+        r"\frac{LastWeek-FirstWeek}{FirstWeek}\times100"
+    )
+
+    st.write(
+        f"({last_week:.2f} - {first_week:.2f}) / {first_week:.2f} × 100"
+    )
+
+    st.metric(
+        "Production Change %",
+        f"{pct_change:.2f}%"
+    )
+
+    if pct_change < 0:
+
+        finding = (
+            f"Production reduced by {abs(pct_change):.2f}% "
+            "over the selected period."
+        )
+
+    elif pct_change > 0:
+
+        finding = (
+            f"Production increased by {pct_change:.2f}% "
+            "over the selected period."
+        )
+
+    else:
+
+        finding = "Production remained stable."
+
+    st.success(f"✅ Finding : {finding}")
+
+    return {
+        "weekly_data": weekly,
+        "percentage_change": pct_change,
+        "finding": finding
+    }
 
     # -------------------------------
     # Investigation Keywords
@@ -483,6 +560,9 @@ if st.button("Ask"):
 
     for agent in plan["agents"]:
         st.success(f"✅ {agent}")
+
+    if plan["intent"] == "investigation":
+        trend_result = trend_agent(coil_df)
     
 
     
