@@ -304,65 +304,6 @@ def show_agent(agent_name, status="Waiting"):
         """,
         unsafe_allow_html=True
     )
-# ==========================================================
-# ASK EXECUTIVE
-# ==========================================================
-
-st.subheader("🧠 Ask Executive")
-
-question=st.text_input(
-
-    "Ask anything about Production, Inventory, Dwell Time or Manufacturing"
-
-)
-
-if st.button("Investigate"):
-
-    plan = planner_agent(question)
-
-    st.divider()
-
-    st.subheader("🧠 Investigation Planner")
-
-    st.write(f"**Intent :** {plan['intent']}")
-    st.write(f"**Primary KPI :** {plan['primary_kpi']}")
-
-    st.write("### Investigation Progress")
-
-    placeholder = st.empty()
-
-    for agent in plan["agents"]:
-
-        with placeholder.container():
-
-            for completed in plan["agents"]:
-
-                if completed == agent:
-
-                    show_agent(completed, "Running")
-
-# -------------------------
-# Execute Trend Agent
-# -------------------------
-
-                    if completed == "Trend Agent":
-
-                        trend_agent(coil_df)
-
-                    break
-
-                show_agent(completed, "Completed")
-
-            time.sleep(1)
-
-    with placeholder.container():
-
-        for completed in plan["agents"]:
-
-            show_agent(completed, "Completed")
-
-    st.success("Investigation Planning Completed")
-
 def trend_agent(coil_df):
 
     st.subheader("📈 Trend Agent")
@@ -433,7 +374,6 @@ Percentage Change :
     )
 
     if change<0:
-
         finding=f"""
 Production reduced by **{abs(change):.2f}%**
 over the last three weeks.
@@ -449,5 +389,67 @@ over the last three weeks.
     st.success(finding)
 
     return weekly
+
+# ==========================================================
+# ASK EXECUTIVE
+# ==========================================================
+
+st.subheader("🧠 Ask Executive")
+
+question=st.text_input(
+
+    "Ask anything about Production, Inventory, Dwell Time or Manufacturing"
+
+)
+
+if st.button("Investigate"):
+
+    plan = planner_agent(question)
+
+    st.divider()
+
+    st.subheader("🧠 Investigation Planner")
+
+    st.write(f"**Intent :** {plan['intent']}")
+    st.write(f"**Primary KPI :** {plan['primary_kpi']}")
+
+    st.write("### Investigation Progress")
+
+    placeholder = st.empty()
+
+    for agent in plan["agents"]:
+
+        with placeholder.container():
+
+            for completed in plan["agents"]:
+
+                if completed == agent:
+
+                    show_agent(completed, "Running")
+
+# -------------------------
+# Execute Trend Agent
+# -------------------------
+
+                    if completed == "Trend Agent":
+
+                        trend_agent(coil_df)
+
+                    break
+
+                show_agent(completed, "Completed")
+
+            time.sleep(1)
+
+    with placeholder.container():
+
+        for completed in plan["agents"]:
+
+            show_agent(completed, "Completed")
+
+    st.success("Investigation Planning Completed")
+
+
+        
 
     
