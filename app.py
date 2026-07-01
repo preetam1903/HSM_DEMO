@@ -617,50 +617,37 @@ if st.button("Investigate"):
 
     st.write("### Investigation Progress")
 
-    placeholder = st.empty()
-
     for agent in plan["agents"]:
 
-        with placeholder.container():
+        st.markdown("---")
 
-            for completed in plan["agents"]:
+        show_agent(agent, "Running")
 
-                if completed == agent:
+        # -----------------------------
+        # Execute Agent
+        # -----------------------------
 
-                    show_agent(completed, "Running")
+        if agent == "Trend Agent":
 
-# -------------------------
-# Execute Trend Agent
-# -------------------------
+            trend_agent(coil_df)
 
-                    if completed == "Trend Agent":
+        elif agent == "Event Agent":
 
-                        trend_agent(coil_df)
-                    if completed == "Event Agent":
+            event_agent(events_df)
 
-                        event_agent(events_df)
-                    if completed == "Inventory Agent":
+        elif agent == "Inventory Agent":
 
-                        inventory_agent(inventory_df)
-                    if completed == "Dwell Agent":
+            inventory_agent(inventory_df)
 
-                        dwell_agent(coil_df)
+        elif agent == "Dwell Agent":
 
-                    break
+            dwell_agent(coil_df)
 
-                show_agent(completed, "Completed")
+        time.sleep(1)
 
-            time.sleep(1)
+        show_agent(agent, "Completed")
 
-    with placeholder.container():
-
-        for completed in plan["agents"]:
-
-            show_agent(completed, "Completed")
-
-    st.success("Investigation Planning Completed")
-
-
+    st.success("✅ Investigation Completed")
         
 
     
