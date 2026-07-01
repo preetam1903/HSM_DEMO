@@ -126,7 +126,8 @@ kpi_df,
 relationship_df,
 playbook_df
 )=load_data()
-
+st.write("COIL_OPERATION_FACT Columns")
+st.write(coil_df.columns.tolist())
 # ==========================================================
 # KPI CARDS
 # ==========================================================
