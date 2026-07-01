@@ -305,91 +305,72 @@ def show_agent(agent_name, status="Waiting"):
         """,
         unsafe_allow_html=True
     )
+###########################
+
 def trend_agent(coil_df):
 
     st.subheader("📈 Trend Agent")
 
     status = st.empty()
-
     status.info("Reading production data...")
 
     df = coil_df.copy()
 
+    # Create Week Number
+    df["WEEK_NO"] = pd.to_datetime(df["PROD_DATE"]).dt.isocalendar().week
+
     weekly = (
         df.groupby("WEEK_NO")
         .agg(
-            Production=("COIL_ID","count"),
-            Tonnage=("COIL_WEIGHT_TON","sum")
+            Production=("MAT_ID", "count"),
+            Tonnage=("COIL_WEIGHT_TON", "sum")
         )
         .reset_index()
+        .sort_values("WEEK_NO")
     )
 
     status.success("Weekly production calculated")
 
-    st.write("### Generated Pandas")
+    st.write("### Generated Pandas Query")
 
-    st.code(
-"""
+    st.code("""
+df["WEEK_NO"] = pd.to_datetime(df["PROD_DATE"]).dt.isocalendar().week
+
 weekly = (
-    coil_df.groupby("WEEK_NO")
-    .agg(
-        Production=("COIL_ID","count"),
-        Tonnage=("COIL_WEIGHT_TON","sum")
-    )
-    .reset_index()
+    df.groupby("WEEK_NO")
+      .agg(
+          Production=("MAT_ID","count"),
+          Tonnage=("COIL_WEIGHT_TON","sum")
+      )
+      .reset_index()
 )
-"""
-)
+""")
 
-    st.write("### Evidence")
+    st.write("### Weekly Production")
 
-    st.dataframe(
-        weekly,
-        use_container_width=True
-    )
+    st.dataframe(weekly, use_container_width=True)
 
     first = weekly.iloc[0]["Production"]
-
     last = weekly.iloc[-1]["Production"]
 
-    change = (
-        (last-first)
-        /first
-    )*100
+    pct = ((last - first) / first) * 100
 
-    st.write("### Calculation")
-
-    st.write(
-
-        f"""
-First Week Production : **{first} coils**
-
-Last Week Production : **{last} coils**
-
-Percentage Change :
-
-(({last}-{first})/{first})×100
-
-= **{change:.2f}%**
-"""
+    st.metric(
+        "Production Change",
+        f"{pct:.2f}%"
     )
 
-    if change<0:
-        finding=f"""
-Production reduced by **{abs(change):.2f}%**
-over the last three weeks.
-"""
-
+    if pct < 0:
+        st.success(
+            f"Production reduced by {abs(pct):.2f}% over the selected period."
+        )
     else:
-
-        finding=f"""
-Production increased by **{change:.2f}%**
-over the last three weeks.
-"""
-
-    st.success(finding)
+        st.success(
+            f"Production increased by {pct:.2f}% over the selected period."
+        )
 
     return weekly
+
 
 # ==========================================================
 # ASK EXECUTIVE
