@@ -278,6 +278,43 @@ def planner_agent(question):
     return plan
 
 # ==========================================================
+# PLANNER DISPLAY
+# ==========================================================
+
+def planner_display(plan):
+
+    st.subheader("🧠 Planner Agent")
+
+    st.success("Investigation planned successfully")
+
+    st.write("### Question")
+    st.info(plan["question"])
+
+    c1, c2 = st.columns(2)
+
+    with c1:
+
+        st.write("**Intent**")
+        st.success(plan["intent"])
+
+        st.write("**Primary KPI**")
+        st.info(plan["primary_kpi"])
+
+    with c2:
+
+        st.write("**Time Period**")
+        st.success(plan["time_period"])
+
+        st.write("**Weeks**")
+        st.info(", ".join(map(str, plan["weeks"])))
+
+    st.write("### Investigation Plan")
+
+    for a in plan["agents"][1:]:
+
+        st.write("➡️", a)
+
+# ==========================================================
 # CONTEXT AGENT
 # ==========================================================
 
