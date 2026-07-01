@@ -449,53 +449,56 @@ def inventory_agent(inventory_df):
     st.subheader("📦 Inventory Agent")
 
     status = st.empty()
-
     status.info("Reading inventory snapshot...")
 
     df = inventory_df.copy()
 
+    df["DATE"] = pd.to_datetime(df["DATE"])
+
     st.write("### Generated Pandas Query")
 
     st.code("""
-inventory_df.groupby("LOCATION")["COIL_COUNT"].sum()
+inventory_df.groupby("PROCESS").agg(
+    Total_Coils=("TOTAL_COILS","sum"),
+    Active_Coils=("ACTIVE_COILS","sum"),
+    High_Priority=("HIGH_PRIORITY_COILS","sum"),
+    Avg_Dwell=("AVG_DWELL_DAYS","mean")
+)
 """)
 
     inventory = (
-        df.groupby("LOCATION")
+        df.groupby("PROCESS")
         .agg(
-            Total_Coils=("COIL_COUNT","sum")
+            Total_Coils=("TOTAL_COILS", "sum"),
+            Active_Coils=("ACTIVE_COILS", "sum"),
+            High_Priority=("HIGH_PRIORITY_COILS", "sum"),
+            Avg_Dwell=("AVG_DWELL_DAYS", "mean")
         )
         .reset_index()
-        .sort_values(
-            "Total_Coils",
-            ascending=False
-        )
+        .sort_values("Total_Coils", ascending=False)
     )
 
-    status.success("Inventory analysed")
+    status.success("Inventory analysis completed")
 
-    st.write("### Inventory by Location")
+    st.write("### Inventory Summary")
 
-    st.dataframe(
-        inventory,
-        use_container_width=True
-    )
+    st.dataframe(inventory, use_container_width=True)
 
     highest = inventory.iloc[0]
 
-    finding = f"""
-Highest inventory observed at
+    st.success(f"""
+Highest inventory is at **{highest['PROCESS']}**
 
-**{highest['LOCATION']}**
+• Total Coils: **{int(highest['Total_Coils'])}**
 
-with
+• Active Coils: **{int(highest['Active_Coils'])}**
 
-**{highest['Total_Coils']} coils**
+• High Priority Coils: **{int(highest['High_Priority'])}**
 
-This may indicate downstream congestion.
-"""
+• Average Dwell: **{highest['Avg_Dwell']:.2f} days**
 
-    st.success(finding)
+This process should be investigated for possible congestion.
+""")
 
     return inventory
 
