@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from openai import OpenAI
+import time
 
 # ==========================================================
 # PAGE CONFIG
@@ -268,40 +269,41 @@ def planner_agent(question):
 # AGENT STATUS CARD
 # ==========================================================
 
-def show_agent(agent_name,status="Waiting"):
 
-    colour="#1e3a8a"
 
-    icon="⚪"
+# ==========================================================
+# AGENT STATUS CARD
+# ==========================================================
 
-    if status=="Running":
+def show_agent(agent_name, status="Waiting"):
 
-        colour="#1d4ed8"
+    if status == "Waiting":
+        color = "#1e3a8a"
+        icon = "⚪"
 
-        icon="🟢"
+    elif status == "Running":
+        color = "#ca8a04"
+        icon = "🟡"
 
-    elif status=="Completed":
-
-        colour="#166534"
-
-        icon="✅"
+    else:
+        color = "#166534"
+        icon = "✅"
 
     st.markdown(
         f"""
-<div style="
-background:{colour};
-padding:14px;
-border-radius:10px;
-margin-bottom:8px;
-font-size:16px;
-font-weight:bold;">
-{icon} {agent_name}
-</div>
-""",
+        <div style="
+        background:{color};
+        padding:14px;
+        border-radius:10px;
+        margin-bottom:8px;
+        font-size:17px;
+        font-weight:bold;
+        color:white;">
+        {icon} {agent_name}
+        </div>
+        """,
         unsafe_allow_html=True
     )
-
-
 # ==========================================================
 # ASK EXECUTIVE
 # ==========================================================
@@ -315,6 +317,43 @@ question=st.text_input(
 )
 
 if st.button("Investigate"):
+
+    plan = planner_agent(question)
+
+    st.divider()
+
+    st.subheader("🧠 Investigation Planner")
+
+    st.write(f"**Intent :** {plan['intent']}")
+    st.write(f"**Primary KPI :** {plan['primary_kpi']}")
+
+    st.write("### Investigation Progress")
+
+    placeholder = st.empty()
+
+    for agent in plan["agents"]:
+
+        with placeholder.container():
+
+            for completed in plan["agents"]:
+
+                if completed == agent:
+
+                    show_agent(completed, "Running")
+
+                    break
+
+                show_agent(completed, "Completed")
+
+            time.sleep(1)
+
+    with placeholder.container():
+
+        for completed in plan["agents"]:
+
+            show_agent(completed, "Completed")
+
+    st.success("Investigation Planning Completed")
 
     plan=planner_agent(question)
 
