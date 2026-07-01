@@ -482,14 +482,4 @@ if st.button("Ask"):
     st.write(plan)
     
 
-    with st.spinner(
-        "Thinking..."
-    ):
-
-        result = ask_question(
-            question
-        )
-
-        st.write(
-            result
-        )
+    
