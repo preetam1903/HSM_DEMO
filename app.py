@@ -391,7 +391,9 @@ def event_agent(events_df):
 events_df.sort_values("EVENT_DATE")
 """)
 
-    df = df.sort_values("EVENT_DATE")
+    df["DATE"] = pd.to_datetime(df["DATE"])
+
+    df = df.sort_values("DATE")
 
     st.write("### Manufacturing Events")
 
@@ -401,12 +403,10 @@ events_df.sort_values("EVENT_DATE")
     )
 
     major_events = df[
-        df["EVENT_TYPE"].isin(
+        df["SEVERITY"].isin(
             [
-                "Maintenance",
-                "Breakdown",
-                "Power Failure",
-                "High Priority Order"
+                "High",
+                "Critical"
             ]
         )
     ]
@@ -422,14 +422,19 @@ events_df.sort_values("EVENT_DATE")
 
     if len(major_events):
 
-        finding = (
-            f"{len(major_events)} significant manufacturing events "
-            "were detected during the investigation period."
-        )
+        finding = f"""
+    Detected **{len(major_events)}** High/Critical manufacturing events.
 
-    else:
+    Estimated Lost Coils :
 
-        finding = "No significant manufacturing events detected."
+    **{major_events['EST_LOST_COILS'].sum()}**
+
+    Primary Areas Impacted :
+
+    {", ".join(major_events['AREA'].unique())}
+
+    Potential production impact identified.
+    """
 
     st.success(finding)
 
@@ -494,6 +499,95 @@ This may indicate downstream congestion.
 
     return inventory
 
+# ==========================================================
+# DWELL AGENT
+# ==========================================================
+
+def dwell_agent(coil_df):
+
+    st.subheader("⏳ Dwell Agent")
+
+    status = st.empty()
+
+    status.info("Reading dwell time information...")
+
+    df = coil_df.copy()
+
+    st.write("### Generated Pandas Query")
+
+    st.code("""
+coil_df.groupby("NEXT_INSTALLATION")
+       .agg(
+            Average_Dwell=("DWELL_DAYS","mean"),
+            Maximum_Dwell=("DWELL_DAYS","max"),
+            Coil_Count=("MAT_ID","count")
+       )
+       .reset_index()
+""")
+
+    dwell = (
+        df.groupby("NEXT_INSTALLATION")
+        .agg(
+            Average_Dwell=("DWELL_DAYS","mean"),
+            Maximum_Dwell=("DWELL_DAYS","max"),
+            Coil_Count=("MAT_ID","count")
+        )
+        .reset_index()
+    )
+
+    status.success("Dwell analysis completed")
+
+    st.write("### Dwell Time by Next Installation")
+
+    st.dataframe(
+        dwell.round(2),
+        use_container_width=True
+    )
+
+    # --------------------------
+    # Daily Abnormal Dwell
+    # --------------------------
+
+    abnormal = df[df["DWELL_DAYS"] > 5]
+
+    st.write("### Abnormal Dwell (>5 Days)")
+
+    if len(abnormal):
+
+        st.dataframe(
+            abnormal[
+                [
+                    "MAT_ID",
+                    "PROD_DATE",
+                    "NEXT_INSTALLATION",
+                    "DWELL_DAYS"
+                ]
+            ],
+            use_container_width=True
+        )
+
+        finding = f"""
+{len(abnormal)} coils exceeded the
+5-day dwell threshold.
+
+Although the weekly average may appear normal,
+a small number of coils experienced significant
+waiting time.
+
+These abnormal dwell spikes can delay downstream
+processing and reduce production.
+"""
+
+    else:
+
+        finding = """
+No abnormal dwell time detected.
+"""
+
+    st.success(finding)
+
+    return abnormal
+
 
 # ==========================================================
 # ASK EXECUTIVE
@@ -545,6 +639,9 @@ if st.button("Investigate"):
                     if completed == "Inventory Agent":
 
                         inventory_agent(inventory_df)
+                    if completed == "Dwell Agent":
+
+                        dwell_agent(coil_df)
 
                     break
 
