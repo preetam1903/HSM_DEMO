@@ -479,7 +479,10 @@ if st.button("Ask"):
 
     plan = planner_agent(question)
 
-    st.write(plan)
+    st.subheader("🧠 Investigation Planner")
+
+    for agent in plan["agents"]:
+        st.success(f"✅ {agent}")
     
 
     
