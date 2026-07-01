@@ -282,7 +282,10 @@ def load_data():
 
 
 coil_df, inventory_df, events_df, kpi_df, relationship_df = load_data()
-
+# Temporary aliases
+production_df = coil_df
+master_df = coil_df
+material_flow_df = pd.DataFrame()
 
 # -------------------
 # EXECUTIVE KPI DASHBOARD
