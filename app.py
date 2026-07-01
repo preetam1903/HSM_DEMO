@@ -621,33 +621,33 @@ if st.button("Investigate"):
 
         st.markdown("---")
 
-        show_agent(agent, "Running")
+        agent_box = st.container()
 
+        
         # -----------------------------
         # Execute Agent
         # -----------------------------
 
-        if agent == "Trend Agent":
+        with agent_box:
 
-            trend_agent(coil_df)
+            show_agent(agent, "Running")
 
-        elif agent == "Event Agent":
+            if agent == "Trend Agent":
+                trend_agent(coil_df)
 
-            event_agent(events_df)
+            elif agent == "Event Agent":
+                event_agent(events_df)
 
-        elif agent == "Inventory Agent":
+            elif agent == "Inventory Agent":
+                inventory_agent(inventory_df)
 
-            inventory_agent(inventory_df)
+            elif agent == "Dwell Agent":
+                dwell_agent(coil_df)
 
-        elif agent == "Dwell Agent":
+            
+                
 
-            dwell_agent(coil_df)
-
-        time.sleep(1)
-
-        show_agent(agent, "Completed")
-
-    st.success("✅ Investigation Completed")
+            show_agent(f"{agent} Completed", "Completed")
         
 
     
