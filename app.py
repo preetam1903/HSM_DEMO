@@ -1,261 +1,92 @@
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go
-import networkx as nx
-#from langchain_ollama import ChatOllama
-from langchain_openai import ChatOpenAI
-import os
+from openai import OpenAI
 
-# -------------------
+# ==========================================================
 # PAGE CONFIG
-# -------------------
+# ==========================================================
 
 st.set_page_config(
-    page_title="Production AI",
+    page_title="Production AI Copilot",
+    page_icon="🏭",
     layout="wide"
 )
-# -------------------
-# PREMIUM UI STYLING
-# -------------------
 
-st.markdown(
-    """
+# ==========================================================
+# PREMIUM UI
+# ==========================================================
 
-    <style>
+st.markdown("""
+<style>
 
-    .stApp {
-
-        background:
-        linear-gradient(
-            135deg,
-            #0b1120,
-            #111827,
-            #1e293b
-        );
-
-        color: #f8fafc;
-    }
-
-    section[data-testid="stSidebar"] {
-
-        background:
-        linear-gradient(
-            180deg,
-            #111827,
-            #0f172a
-        );
-    }
-
-    h1 {
-
-        color: #60a5fa !important;
-
-        font-size: 48px !important;
-
-        font-weight: 800 !important;
-    }
-
-    h2, h3 {
-
-        color: #93c5fd !important;
-    }
-
-    p,
-    label,
-    .stMarkdown {
-
-        color: #f8fafc !important;
-    }
-
-    div[data-testid="metric-container"] {
-
-        background:
-        rgba(255,255,255,0.08);
-
-        border:
-        1px solid rgba(255,255,255,0.12);
-
-        padding: 20px;
-
-        border-radius: 20px;
-
-        backdrop-filter: blur(10px);
-
-        box-shadow:
-        0 8px 24px rgba(0,0,0,0.35);
-    }
-
-    .stButton button {
-
-        background:
-        linear-gradient(
-            135deg,
-            #2563eb,
-            #1d4ed8
-        );
-
-        color: white !important;
-
-        border-radius: 12px;
-
-        border: none;
-
-        padding: 10px 24px;
-
-        font-weight: 700;
-    }
-
-    .stButton button:hover {
-
-        background:
-        linear-gradient(
-            135deg,
-            #3b82f6,
-            #2563eb
-        );
-    }
-
-    /* AI STATUS BANNER */
-
-    .ai-banner {
-
-        background:
-        linear-gradient(
-            135deg,
-            rgba(37,99,235,0.25),
-            rgba(6,182,212,0.20)
-        );
-
-        border:
-        1px solid rgba(96,165,250,0.35);
-
-        border-radius: 18px;
-
-        padding: 18px;
-
-        margin-bottom: 25px;
-
-        box-shadow:
-        0 0 24px rgba(59,130,246,0.25);
-
-        animation:
-        pulseGlow 3s infinite;
-    }
-
-    .ai-title {
-
-        color: #f8fafc;
-
-        font-size: 14px;
-
-        font-weight: 600;
-    }
-
-    .ai-sub {
-
-        color: #cbd5e1;
-
-        margin-top: 6px;
-
-        font-size: 10px;
-        
-    }
-
-    @keyframes pulseGlow {
-
-        0% {
-
-            box-shadow:
-            0 0 12px rgba(59,130,246,0.18);
-        }
-
-        50% {
-
-            box-shadow:
-            0 0 28px rgba(59,130,246,0.35);
-        }
-
-        100% {
-
-            box-shadow:
-            0 0 12px rgba(59,130,246,0.18);
-        }
-    }
-    /* INSIGHT BANNER */
-
-.insight-banner {
-
-    background:
-    linear-gradient(
-        135deg,
-        rgba(37,99,235,0.22),
-        rgba(15,23,42,0.92)
-    );
-
-    border:
-    1px solid rgba(96,165,250,0.35);
-
-    border-radius: 18px;
-
-    padding: 18px;
-
-    margin-top: 20px;
-
-    margin-bottom: 20px;
-
-    color: #f8fafc;
-
-    font-size: 16px;
-
-    font-weight: 600;
-
-    box-shadow:
-    0 0 24px rgba(59,130,246,0.25);
-
-    animation:
-    insightGlow 2.5s infinite;
+.stApp{
+background:linear-gradient(135deg,#081120,#111827,#1e293b);
+color:white;
 }
 
-/* BLINKING GLOW */
-
-@keyframes insightGlow {
-
-    0% {
-
-        box-shadow:
-        0 0 10px rgba(59,130,246,0.15);
-    }
-
-    50% {
-
-        box-shadow:
-        0 0 28px rgba(59,130,246,0.40);
-    }
-
-    100% {
-
-        box-shadow:
-        0 0 10px rgba(59,130,246,0.15);
-    }
+h1{
+color:#60a5fa;
+font-weight:800;
 }
-    
-    </style>
-    """,
 
-    unsafe_allow_html=True
+div[data-testid="metric-container"]{
+background:rgba(255,255,255,0.08);
+border-radius:18px;
+padding:18px;
+border:1px solid rgba(255,255,255,.10);
+box-shadow:0px 8px 18px rgba(0,0,0,.30);
+}
+
+.stButton>button{
+background:#2563eb;
+color:white;
+border-radius:10px;
+font-weight:bold;
+border:none;
+height:45px;
+width:180px;
+}
+
+.agent{
+padding:12px;
+border-radius:10px;
+background:#172554;
+border-left:5px solid #3b82f6;
+margin-bottom:8px;
+}
+
+.successAgent{
+padding:12px;
+border-radius:10px;
+background:#14532d;
+border-left:5px solid #22c55e;
+margin-bottom:8px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# ==========================================================
+# TITLE
+# ==========================================================
+
+st.title("🏭 Production AI Investigation Copilot")
+
+st.caption(
+    "Executive Investigation Platform for Manufacturing Operations"
 )
-st.title(
-    "🏭 Production AI Copilot"
+
+# ==========================================================
+# OPENAI
+# ==========================================================
+
+client = OpenAI(
+    api_key=st.secrets["OPENAI_API_KEY"]
 )
 
-st.write(
-    "KEY KPI'S"
-)
-
-
-# -------------------
-# LOAD AI MODEL
-# -------------------
+# ==========================================================
+# LOAD DATA
+# ==========================================================
 
 @st.cache_data
 def load_data():
@@ -270,118 +101,78 @@ def load_data():
 
     relationship_df = pd.read_excel("KPI_RELATIONSHIPS.xlsx")
 
-    coil_df["PROD_DATE"] = pd.to_datetime(coil_df["PROD_DATE"])
+    playbook_df = pd.read_excel("INVESTIGATION_PLAYBOOK.xlsx")
+
+    coil_df["PROD_DATE"] = pd.to_datetime(
+        coil_df["PROD_DATE"]
+    )
 
     return (
         coil_df,
         inventory_df,
         events_df,
         kpi_df,
-        relationship_df
+        relationship_df,
+        playbook_df
     )
 
 
-coil_df, inventory_df, events_df, kpi_df, relationship_df = load_data()
-# Temporary aliases
-production_df = coil_df
-master_df = coil_df
-material_flow_df = pd.DataFrame()
+(
+coil_df,
+inventory_df,
+events_df,
+kpi_df,
+relationship_df,
+playbook_df
+)=load_data()
 
-#
-# -------------------
-# AI INSIGHT BANNER
-# -------------------
+# ==========================================================
+# KPI CARDS
+# ==========================================================
 
-# -------------------
-# AI INSIGHT BANNER
-# -------------------
+st.subheader("Executive KPIs")
 
+c1,c2,c3,c4=st.columns(4)
 
+with c1:
 
+    st.metric(
+        "Total Coils",
+        len(coil_df)
+    )
 
-# -------------------
-# EXECUTIVE SUMMARY
-# -------------------
-# -------------------
-# EXECUTIVE SUMMARY
-# -------------------
+with c2:
 
-def generate_executive_summary(result_df):
-
-    try:
-
-        total_rows = len(result_df)
-
-        if "TONNAGE" in result_df.columns:
-
-            total_tonnage = (
-                result_df[
-                    "TONNAGE"
-                ]
-                .sum()
-            )
-
-        else:
-
-            total_tonnage = 0
-
-        summary = f"""
-🧠 Executive Summary
-
-• Records analyzed: {total_rows}
-
-• Total tonnage impacted: {total_tonnage:,.2f}
-
-• AI Observation:
-Operational trends appear stable with active monitoring enabled.
-"""
-
-        st.markdown(
-            f"""
-<div class="insight-banner">
-{summary}
-</div>
-""",
-            unsafe_allow_html=True
+    st.metric(
+        "Active Coils",
+        len(
+            coil_df[
+                coil_df["COIL_STATUS"]=="ACTIVE"
+            ]
         )
-
-    except:
-
-        pass
-# -------------------
-# AI RECOMMENDATION ENGINE
-# -------------------
-
-def show_ai_recommendation(message):
-
-    st.markdown(
-        f"""
-<div class="insight-banner">
-
-🧠 AI Recommendation
-
-<br><br>
-
-{message}
-
-</div>
-""",
-        unsafe_allow_html=True
     )
 
-    
+with c3:
 
-   
+    st.metric(
+        "Inventory",
+        len(inventory_df)
+    )
+
+with c4:
+
+    st.metric(
+        "Manufacturing Events",
+        len(events_df)
+    )
+
+st.divider()
 
 # ==========================================================
 # PLANNER AGENT
 # ==========================================================
 
-def planner_agent(question: str):
-    """
-    Decide whether the question is a simple data query
-    or a multi-agent investigation.
-    """
+def planner_agent(question):
 
     q = question.lower()
 
@@ -390,106 +181,11 @@ def planner_agent(question: str):
         "primary_kpi": "Unknown",
         "agents": []
     }
-# ==========================================================
-# TREND AGENT
-# ==========================================================
 
-def trend_agent(coil_df):
-
-    st.info("🟢 Trend Agent : Reading production data...")
-
-    df = coil_df.copy()
-
-    # Weekly production
-    weekly = (
-        df.groupby("WEEK_NO")["COIL_WEIGHT_TON"]
-        .sum()
-        .reset_index()
-        .sort_values("WEEK_NO")
-    )
-
-    st.write("### Generated Pandas Query")
-
-    st.code(
-        'coil_df.groupby("WEEK_NO")["COIL_WEIGHT_TON"].sum().reset_index()',
-        language="python"
-    )
-
-    st.write("### Weekly Production")
-
-    st.dataframe(weekly, use_container_width=True)
-
-    # Trend Calculation
-    first_week = weekly.iloc[0]["COIL_WEIGHT_TON"]
-    last_week = weekly.iloc[-1]["COIL_WEIGHT_TON"]
-
-    change = last_week - first_week
-
-    pct_change = (change / first_week) * 100
-
-    st.write("### Calculation")
-
-    st.latex(
-        r"\frac{LastWeek-FirstWeek}{FirstWeek}\times100"
-    )
-
-    st.write(
-        f"({last_week:.2f} - {first_week:.2f}) / {first_week:.2f} × 100"
-    )
-
-    st.metric(
-        "Production Change %",
-        f"{pct_change:.2f}%"
-    )
-
-    if pct_change < 0:
-
-        finding = (
-            f"Production reduced by {abs(pct_change):.2f}% "
-            "over the selected period."
-        )
-
-    elif pct_change > 0:
-
-        finding = (
-            f"Production increased by {pct_change:.2f}% "
-            "over the selected period."
-        )
-
-    else:
-
-        finding = "Production remained stable."
-
-    st.success(f"✅ Finding : {finding}")
-
-    return {
-        "weekly_data": weekly,
-        "percentage_change": pct_change,
-        "finding": finding
-    }
-
-    # -------------------------------
-    # Investigation Keywords
-    # -------------------------------
-    investigation_words = [
-        "why",
-        "reason",
-        "root cause",
-        "investigate",
-        "analysis",
-        "analyse",
-        "impact",
-        "correlation",
-        "anomaly",
-        "drop",
-        "reduce",
-        "decline",
-        "increase"
-    ]
-
-    # -------------------------------
+    # -----------------------------
     # Detect KPI
-    # -------------------------------
+    # -----------------------------
+
     if "production" in q:
         plan["primary_kpi"] = "Production"
 
@@ -502,28 +198,57 @@ def trend_agent(coil_df):
     elif "active" in q:
         plan["primary_kpi"] = "Active Coils"
 
-    elif "yield" in q:
-        plan["primary_kpi"] = "Yield"
+    elif "maintenance" in q:
+        plan["primary_kpi"] = "Maintenance"
 
-    elif "speed" in q:
-        plan["primary_kpi"] = "Rolling Speed"
+    # -----------------------------
+    # Investigation Detection
+    # -----------------------------
 
-    # -------------------------------
-    # Intent
-    # -------------------------------
-    is_investigation = any(word in q for word in investigation_words)
+    investigation_words = [
 
-    if is_investigation:
+        "why",
+
+        "reason",
+
+        "investigate",
+
+        "analysis",
+
+        "analyse",
+
+        "impact",
+
+        "drop",
+
+        "decline",
+
+        "root cause",
+
+        "correlation",
+
+        "anomaly"
+
+    ]
+
+    if any(word in q for word in investigation_words):
 
         plan["intent"] = "investigation"
 
         plan["agents"] = [
+
             "Planner Agent",
+
             "Trend Agent",
+
             "Event Agent",
+
             "Inventory Agent",
+
             "Dwell Agent",
+
             "Executive Summary Agent"
+
         ]
 
     else:
@@ -531,38 +256,82 @@ def trend_agent(coil_df):
         plan["intent"] = "query"
 
         plan["agents"] = [
+
             "Data Query Agent"
+
         ]
 
     return plan
 
 
-# QUESTION ENGINE
-# -------------------
+# ==========================================================
+# AGENT STATUS CARD
+# ==========================================================
+
+def show_agent(agent_name,status="Waiting"):
+
+    colour="#1e3a8a"
+
+    icon="⚪"
+
+    if status=="Running":
+
+        colour="#1d4ed8"
+
+        icon="🟢"
+
+    elif status=="Completed":
+
+        colour="#166534"
+
+        icon="✅"
+
+    st.markdown(
+        f"""
+<div style="
+background:{colour};
+padding:14px;
+border-radius:10px;
+margin-bottom:8px;
+font-size:16px;
+font-weight:bold;">
+{icon} {agent_name}
+</div>
+""",
+        unsafe_allow_html=True
+    )
 
 
+# ==========================================================
+# ASK EXECUTIVE
+# ==========================================================
 
-# -------------------
-# USER INTERFACE
-# -------------------
+st.subheader("🧠 Ask Executive")
 
-question = st.text_input(
-    "Ask a question"
+question=st.text_input(
+
+    "Ask anything about Production, Inventory, Dwell Time or Manufacturing"
+
 )
 
-if st.button("Ask"):
+if st.button("Investigate"):
 
-    question = "Why has production reduced over the last 3 weeks?"
+    plan=planner_agent(question)
 
-    plan = planner_agent(question)
+    st.divider()
 
-    st.subheader("🧠 Investigation Planner")
+    st.subheader("Investigation Planner")
+
+    st.write(f"**Intent :** {plan['intent']}")
+
+    st.write(f"**Primary KPI :** {plan['primary_kpi']}")
+
+    st.write("### Planned Agents")
 
     for agent in plan["agents"]:
-        st.success(f"✅ {agent}")
 
-    if plan["intent"] == "investigation":
-        trend_result = trend_agent(coil_df)
-    
+        show_agent(agent)
 
-    
+    st.success("✅ Planner Agent Completed")
+
+    st.info("Trend Agent will be connected in Part 2.")
