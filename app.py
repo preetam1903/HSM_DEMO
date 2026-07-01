@@ -569,133 +569,240 @@ during the investigation period.
 # ==========================================================
 # EVENT AGENT
 # ==========================================================
+# ==========================================================
+# EVENT AGENT
+# ==========================================================
 
-def event_agent(events_df):
+def event_agent(events_df, plan):
 
     st.subheader("🛠️ Event Agent")
 
     status = st.empty()
-
-    status.info("Reading manufacturing events...")
+    status.info("Searching for relevant manufacturing events...")
 
     df = events_df.copy()
+
+    df["DATE"] = pd.to_datetime(df["DATE"])
+    df["WEEK_NO"] = df["DATE"].dt.isocalendar().week.astype(int)
+
+    # ----------------------------------------
+    # Filter Investigation Weeks
+    # ----------------------------------------
+
+    if len(plan["weeks"]) > 0:
+
+        df = df[
+            df["WEEK_NO"].isin(plan["weeks"])
+        ]
+
+    # ----------------------------------------
+    # Keep only High / Critical
+    # ----------------------------------------
+
+    df = df[
+        df["SEVERITY"].isin(
+            ["High", "Critical"]
+        )
+    ]
+
+    status.success("Relevant events identified")
 
     st.write("### Generated Pandas Query")
 
     st.code("""
-events_df.sort_values("EVENT_DATE")
+events_df["WEEK_NO"]=pd.to_datetime(events_df["DATE"]).dt.isocalendar().week
+
+events=events_df[
+    (events_df["WEEK_NO"].isin(selected_weeks))
+    &
+    (events_df["SEVERITY"].isin(["High","Critical"]))
+]
 """)
 
-    df["DATE"] = pd.to_datetime(df["DATE"])
-
-    df = df.sort_values("DATE")
-
-    st.write("### Manufacturing Events")
+    st.write("### Relevant Manufacturing Events")
 
     st.dataframe(
-        df,
-        use_container_width=True
-    )
-
-    major_events = df[
-        df["SEVERITY"].isin(
+        df[
             [
-                "High",
-                "Critical"
+                "DATE",
+                "AREA",
+                "EQUIPMENT",
+                "EVENT_TYPE",
+                "SEVERITY",
+                "EST_LOST_COILS",
+                "ROOT_CAUSE"
             ]
-        )
-    ]
-
-    status.success("Events analysed")
-
-    st.write("### Evidence")
-
-    st.dataframe(
-        major_events,
+        ],
         use_container_width=True
     )
 
-    if len(major_events):
+    total_loss = df["EST_LOST_COILS"].sum()
 
-        finding = f"""
-    Detected **{len(major_events)}** High/Critical manufacturing events.
+    st.metric(
+        "Estimated Lost Coils",
+        int(total_loss)
+    )
 
-    Estimated Lost Coils :
+    st.success(
+        f"""
+{len(df)} High/Critical events were found during the
+selected investigation period.
 
-    **{major_events['EST_LOST_COILS'].sum()}**
+Estimated Production Loss :
 
-    Primary Areas Impacted :
+**{int(total_loss)} coils**
+"""
+    )
 
-    {", ".join(major_events['AREA'].unique())}
+    return {
 
-    Potential production impact identified.
-    """
+        "events": df,
 
-    st.success(finding)
+        "lost_coils": total_loss,
 
-    return major_events
+        "count": len(df)
+    }
 
 # ==========================================================
 # INVENTORY AGENT
 # ==========================================================
+# ==========================================================
+# INVENTORY AGENT
+# ==========================================================
 
-def inventory_agent(inventory_df):
+def inventory_agent(inventory_df, plan):
 
     st.subheader("📦 Inventory Agent")
 
     status = st.empty()
-    status.info("Reading inventory snapshot...")
+    status.info("Analysing inventory trend...")
 
     df = inventory_df.copy()
 
     df["DATE"] = pd.to_datetime(df["DATE"])
 
+    df["WEEK_NO"] = (
+        df["DATE"]
+        .dt.isocalendar()
+        .week
+        .astype(int)
+    )
+
+    # -----------------------------------------
+    # Investigation Weeks
+    # -----------------------------------------
+
+    if len(plan["weeks"]) > 0:
+
+        df = df[
+            df["WEEK_NO"].isin(plan["weeks"])
+        ]
+
+    status.success("Inventory trend prepared")
+
     st.write("### Generated Pandas Query")
 
     st.code("""
-inventory_df.groupby("PROCESS").agg(
-    Total_Coils=("TOTAL_COILS","sum"),
-    Active_Coils=("ACTIVE_COILS","sum"),
-    High_Priority=("HIGH_PRIORITY_COILS","sum"),
-    Avg_Dwell=("AVG_DWELL_DAYS","mean")
+inventory_df["WEEK_NO"]=pd.to_datetime(
+    inventory_df["DATE"]
+).dt.isocalendar().week
+
+inventory=(
+inventory_df[
+inventory_df["WEEK_NO"].isin(selected_weeks)
+]
+.groupby(["WEEK_NO","PROCESS"])
+.sum()
 )
 """)
 
+    # -----------------------------------------
+    # Weekly Inventory
+    # -----------------------------------------
+
     inventory = (
-        df.groupby("PROCESS")
+        df.groupby(
+            ["WEEK_NO","PROCESS"]
+        )
         .agg(
-            Total_Coils=("TOTAL_COILS", "sum"),
-            Active_Coils=("ACTIVE_COILS", "sum"),
-            High_Priority=("HIGH_PRIORITY_COILS", "sum"),
-            Avg_Dwell=("AVG_DWELL_DAYS", "mean")
+
+            Total_Coils=("TOTAL_COILS","sum"),
+
+            Active_Coils=("ACTIVE_COILS","sum"),
+
+            High_Priority=("HIGH_PRIORITY_COILS","sum"),
+
+            Avg_Dwell=("AVG_DWELL_DAYS","mean")
+
         )
         .reset_index()
-        .sort_values("Total_Coils", ascending=False)
+
+        .sort_values(
+            ["PROCESS","WEEK_NO"]
+        )
     )
 
-    status.success("Inventory analysis completed")
+    st.write("### Inventory Trend")
 
-    st.write("### Inventory Summary")
+    st.dataframe(
+        inventory,
+        use_container_width=True
+    )
 
-    st.dataframe(inventory, use_container_width=True)
+    st.write("### Inventory Trend Chart")
 
-    highest = inventory.iloc[0]
+    chart = (
+        inventory
+        .pivot(
+            index="WEEK_NO",
+            columns="PROCESS",
+            values="Total_Coils"
+        )
+    )
+
+    st.line_chart(chart)
+
+    # -----------------------------------------
+    # Highest Inventory
+    # -----------------------------------------
+
+    latest_week = inventory["WEEK_NO"].max()
+
+    latest = inventory[
+        inventory["WEEK_NO"]==latest_week
+    ]
+
+    highest = latest.loc[
+        latest["Total_Coils"].idxmax()
+    ]
 
     st.success(f"""
-Highest inventory is at **{highest['PROCESS']}**
+Highest inventory during investigation period
 
-• Total Coils: **{int(highest['Total_Coils'])}**
+**Process : {highest['PROCESS']}**
 
-• Active Coils: **{int(highest['Active_Coils'])}**
+Total Coils : **{int(highest['Total_Coils'])}**
 
-• High Priority Coils: **{int(highest['High_Priority'])}**
+Active Coils : **{int(highest['Active_Coils'])}**
 
-• Average Dwell: **{highest['Avg_Dwell']:.2f} days**
+High Priority Coils : **{int(highest['High_Priority'])}**
 
-This process should be investigated for possible congestion.
+Average Dwell : **{highest['Avg_Dwell']:.2f} Days**
+
+Possible downstream congestion detected.
 """)
 
-    return inventory
+    return {
+
+        "inventory": inventory,
+
+        "highest_process": highest["PROCESS"],
+
+        "highest_inventory": int(
+            highest["Total_Coils"]
+        )
+
+    }
 
 # ==========================================================
 # DWELL AGENT
@@ -838,10 +945,10 @@ if st.button("Investigate"):
                 trend_result = trend_agent(coil_df, plan)
 
             elif agent == "Event Agent":
-                event_agent(events_df)
+                event_result = event_agent(events_df,plan)
 
             elif agent == "Inventory Agent":
-                inventory_agent(inventory_df)
+                inventory_result = inventory_agent(inventory_df,plan)
 
             elif agent == "Dwell Agent":
                 dwell_agent(coil_df)
