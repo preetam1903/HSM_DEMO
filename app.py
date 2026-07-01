@@ -173,19 +173,25 @@ st.divider()
 # ==========================================================
 # PLANNER AGENT
 # ==========================================================
+# ==========================================================
+# PLANNER AGENT
+# ==========================================================
 
 def planner_agent(question):
 
     q = question.lower()
 
     plan = {
-        "intent": "query",
+        "question": question,
+        "intent": "Query",
         "primary_kpi": "Unknown",
+        "time_period": "Current",
+        "weeks": [],
         "agents": []
     }
 
     # -----------------------------
-    # Detect KPI
+    # KPI Detection
     # -----------------------------
 
     if "production" in q:
@@ -197,71 +203,113 @@ def planner_agent(question):
     elif "inventory" in q:
         plan["primary_kpi"] = "Inventory"
 
-    elif "active" in q:
-        plan["primary_kpi"] = "Active Coils"
-
     elif "maintenance" in q:
         plan["primary_kpi"] = "Maintenance"
 
+    elif "active" in q:
+        plan["primary_kpi"] = "Active Coils"
+
     # -----------------------------
-    # Investigation Detection
+    # Time Detection
+    # -----------------------------
+
+    if "last 3 week" in q or "3 weeks" in q:
+
+        plan["time_period"] = "Last 3 Weeks"
+
+        latest_week = (
+            pd.to_datetime(coil_df["PROD_DATE"])
+            .dt.isocalendar()
+            .week
+            .max()
+        )
+
+        plan["weeks"] = [
+            int(latest_week-2),
+            int(latest_week-1),
+            int(latest_week)
+        ]
+
+    # -----------------------------
+    # Intent Detection
     # -----------------------------
 
     investigation_words = [
 
         "why",
-
         "reason",
-
         "investigate",
-
         "analysis",
-
         "analyse",
-
         "impact",
-
         "drop",
-
         "decline",
-
         "root cause",
-
         "correlation",
-
         "anomaly"
 
     ]
 
     if any(word in q for word in investigation_words):
 
-        plan["intent"] = "investigation"
+        plan["intent"] = "Investigation"
 
         plan["agents"] = [
 
             "Planner Agent",
-
+            "Context Agent",
             "Trend Agent",
-
             "Event Agent",
-
             "Inventory Agent",
-
             "Dwell Agent",
-
+            "Correlation Agent",
             "Executive Summary Agent"
 
         ]
 
     else:
 
-        plan["intent"] = "query"
-
         plan["agents"] = [
 
             "Data Query Agent"
 
         ]
+
+    return plan
+
+# ==========================================================
+# CONTEXT AGENT
+# ==========================================================
+
+def context_agent(plan):
+
+    st.subheader("📅 Context Agent")
+
+    st.success("Question understood successfully")
+
+    c1, c2 = st.columns(2)
+
+    with c1:
+
+        st.write("**Question**")
+        st.info(plan["question"])
+
+        st.write("**Intent**")
+        st.success(plan["intent"])
+
+        st.write("**Primary KPI**")
+        st.info(plan["primary_kpi"])
+
+    with c2:
+
+        st.write("**Time Period**")
+        st.success(plan["time_period"])
+
+        st.write("**Weeks Selected**")
+        st.info(", ".join(map(str, plan["weeks"])))
+
+        st.write("**Plant**")
+        st.success("HSM")
 
     return plan
 
@@ -632,7 +680,11 @@ if st.button("Investigate"):
 
             show_agent(agent, "Running")
 
-            if agent == "Trend Agent":
+            if agent == "Context Agent":
+
+                context_agent(plan)
+
+            elif agent == "Trend Agent":
                 trend_agent(coil_df)
 
             elif agent == "Event Agent":
