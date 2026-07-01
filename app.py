@@ -279,65 +279,7 @@ def load_data():
         kpi_df,
         relationship_df
     )
-# -------------------
-# LOAD DATA
-# -------------------
 
-@st.cache_data
-def load_data():
-
-    production_df = pd.read_excel(
-        "PRODUCTION_DATA.xlsx"
-    )
-
-    order_df = pd.read_excel(
-        "ORDER_DATA.xlsx"
-    )
-
-    defect_df = pd.read_excel(
-        "DEFECT_DATA.xlsx"
-    )
-
-    material_flow_df = pd.read_excel(
-        "MATERIAL_FLOW_DATA.xlsx"
-    )
-
-    production_df[
-        "PROD_DATE"
-    ] = pd.to_datetime(
-        production_df[
-            "PROD_DATE"
-        ]
-    )
-
-    master_df = (
-
-        production_df
-
-        .merge(
-            order_df,
-            on="ORDER_NO",
-            how="left"
-        )
-
-        .merge(
-            defect_df[
-                [
-                    "MAT_ID",
-                    "DEFECT_NAME",
-                    "BLOCKING_DEFECT"
-                ]
-            ],
-            on="MAT_ID",
-            how="left"
-        )
-    )
-
-    return (
-        production_df,
-        master_df,
-        material_flow_df
-    )
 
 coil_df, inventory_df, events_df, kpi_df, relationship_df = load_data()
 
