@@ -330,38 +330,38 @@ def planner_agent(question):
 # Investigation Questions
 # ---------------------------------------------
 
-if any(word in q for word in investigation_words):
+    if any(word in q for word in investigation_words):
 
-    plan["intent"] = "Investigation"
+        plan["intent"] = "Investigation"
 
-    plan["agents"] = [
+        plan["agents"] = [
 
-        "Planner Agent",
-        "Context Agent",
-        "Trend Agent",
-        "Event Agent",
-        "Inventory Agent",
-        "Dwell Agent",
-        "Correlation Agent",
-        "Executive Summary Agent"
+            "Planner Agent",
+            "Context Agent",
+            "Trend Agent",
+            "Event Agent",
+            "Inventory Agent",
+            "Dwell Agent",
+            "Correlation Agent",
+            "Executive Summary Agent"
 
-    ]
+        ]
 
 # ---------------------------------------------
 # Simple Analysis Questions
 # ---------------------------------------------
 
-else:
+    else:
 
-    plan["intent"] = "Analysis"
+        plan["intent"] = "Analysis"
 
-    plan["agents"] = [
+        plan["agents"] = [
 
-        "Trend Agent"
+            "Trend Agent"
 
-    ]
+        ]
 
-    return plan
+        return plan
 
 # ==========================================================
 # PLANNER DISPLAY
