@@ -1622,6 +1622,54 @@ if st.button("Investigate"):
                     correlation_result
 
                 )
+                st.divider()
+
+                st.header("🚀 Next Steps")
+
+                st.markdown("""
+### Version 2 Roadmap
+
+✅ Historical Investigation
+- Compare with previous weeks and months
+- Detect recurring production issues
+- Learn from historical investigations
+
+✅ Dynamic Business Dimension Discovery
+- Automatically identify the most relevant business dimension
+- Grade
+- Customer
+- Route
+- Width
+- Thickness
+- Steel Family
+- Production Unit
+- Shift
+- Order
+
+✅ Executive Investigation Explorer
+- Natural language follow-up questions
+- Generate Pandas queries automatically
+- Perform interactive root-cause analysis
+
+✅ Metadata-Driven Investigation
+- No hardcoded business dimensions
+- Auto-discover KPIs and dimensions
+- Metadata-driven investigation workflow
+
+✅ Manufacturing Knowledge Graph
+- Correlate Production, Inventory, Dwell, Quality, Maintenance and Events
+
+✅ Recommendation Agent
+- Recommend corrective actions
+- Estimate production recovery
+- Prioritize operational decisions
+
+✅ Continuous Learning
+- Learn from previous investigations
+- Build an Executive Knowledge Repository
+                """)
+
+            
 
             
                 
