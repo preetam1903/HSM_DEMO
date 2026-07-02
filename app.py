@@ -20,48 +20,96 @@ st.set_page_config(
 st.markdown("""
 <style>
 
+/* Main Background */
+
 .stApp{
-background:linear-gradient(135deg,#081120,#111827,#1e293b);
-color:white;
+    background:#f7f9fc;
 }
 
-h1{
-color:#60a5fa;
-font-weight:800;
+/* Headers */
+
+h1,h2,h3{
+    color:#1f2937;
 }
+
+/* KPI Cards */
 
 div[data-testid="metric-container"]{
-background:rgba(255,255,255,0.08);
-border-radius:18px;
-padding:18px;
-border:1px solid rgba(255,255,255,.10);
-box-shadow:0px 8px 18px rgba(0,0,0,.30);
+    background:white;
+    border-radius:12px;
+    padding:18px;
+    border:1px solid #e5e7eb;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);
 }
+
+/* Buttons */
 
 .stButton>button{
-background:#2563eb;
-color:white;
-border-radius:10px;
-font-weight:bold;
-border:none;
-height:45px;
-width:180px;
+    background:#2563eb;
+    color:white;
+    border:none;
+    border-radius:8px;
+    font-weight:bold;
+    height:45px;
+    width:180px;
 }
 
-.agent{
-padding:12px;
-border-radius:10px;
-background:#172554;
-border-left:5px solid #3b82f6;
-margin-bottom:8px;
+/* Running Agent */
+
+.runningAgent{
+
+    background:#fff7ed;
+
+    border-left:6px solid #f59e0b;
+
+    padding:16px;
+
+    border-radius:10px;
+
+    margin-bottom:10px;
+
 }
+
+/* Completed Agent */
 
 .successAgent{
-padding:12px;
-border-radius:10px;
-background:#14532d;
-border-left:5px solid #22c55e;
-margin-bottom:8px;
+
+    background:#ecfdf5;
+
+    border-left:6px solid #10b981;
+
+    padding:16px;
+
+    border-radius:10px;
+
+    margin-bottom:10px;
+
+}
+
+/* Tables */
+
+[data-testid="stDataFrame"]{
+
+    background:white;
+
+    border-radius:10px;
+
+}
+
+/* Text Input */
+
+.stTextInput input{
+
+    background:white;
+
+}
+
+/* Expanders */
+
+.streamlit-expanderHeader{
+
+    font-weight:600;
+
 }
 
 </style>
@@ -377,18 +425,11 @@ def show_agent(agent_name, status="Waiting"):
 
     st.markdown(
         f"""
-        <div style="
-        background:{color};
-        padding:14px;
-        border-radius:10px;
-        margin-bottom:8px;
-        font-size:17px;
-        font-weight:bold;
-        color:white;">
-        {icon} {agent_name}
-        </div>
-        """,
-        unsafe_allow_html=True
+    <div class="{css}">
+    <h4>{icon} {agent_name}</h4>
+    </div>
+    """,
+    unsafe_allow_html=True
     )
 ###########################
 
@@ -887,7 +928,7 @@ Possible downstream congestion before
 # DWELL AGENT
 # ==========================================================
 
-def dwell_agent(coil_df):
+def dwell_agent(coil_df,plan):
 
     st.subheader("⏳ Dwell Agent")
 
@@ -896,6 +937,19 @@ def dwell_agent(coil_df):
     status.info("Reading dwell time information...")
 
     df = coil_df.copy()
+
+    df["WEEK_NO"] = (
+        pd.to_datetime(df["PROD_DATE"])
+        .dt.isocalendar()
+        .week
+        .astype(int)
+    )
+
+    if len(plan["weeks"]) > 0:
+
+        df = df[
+            df["WEEK_NO"].isin(plan["weeks"])
+        ]
 
     st.write("### Generated Pandas Query")
 
