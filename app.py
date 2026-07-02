@@ -552,6 +552,52 @@ weekly = (
     )
 
     # ---------------------------------------
+# Production by Grade
+# ---------------------------------------
+
+    st.write("### Production by Grade")
+
+    grade_summary = (
+
+        df.groupby("GRADE")
+
+        .agg(
+
+            Production=("MAT_ID", "count"),
+
+            Tonnage=("COIL_WEIGHT_TON", "sum")
+
+        )
+
+        .reset_index()
+
+        .sort_values(
+            "Production",
+            ascending=False
+        )
+
+    )
+
+    st.dataframe(
+        grade_summary,
+        use_container_width=True
+    )
+
+    st.bar_chart(
+        grade_summary.set_index("GRADE")["Production"]
+    )
+
+    top_grade = grade_summary.iloc[0]
+
+    st.success(f"""
+    Highest production was for **{top_grade['GRADE']}**
+
+    Production : **{int(top_grade['Production'])} coils**
+
+    Tonnage : **{top_grade['Tonnage']:.2f} Tons**
+    """)
+
+    # ---------------------------------------
     # Trend Chart
     # ---------------------------------------
 
