@@ -638,14 +638,27 @@ weekly = (
 
     st.error(f"""
 
-    Largest production reduction
-    
-    Grade : **{worst_grade}**
-    
-    Reduction : **{abs(worst_change):.1f}%**
+    Largest production reduction detected
 
-    This grade will be investigated further
-    across Inventory, Dwell and Events.
+    **Grade : {worst_grade}**
+
+    **Reduction : {abs(worst_change):.1f}%**
+
+    This dimension has been identified as the
+    largest contributor to the production decline.
+
+    In Version 1, the Correlation Agent uses this
+    information together with Inventory, Events and
+    Dwell evidence to determine the most likely
+    business reason.
+
+    **Future Enhancement (Version 2):**
+    Instead of analysing predefined dimensions such
+    as Grade, the Metadata Agent will automatically
+    identify the most relevant business dimension
+    (Customer, Route, Width, Thickness, Order,
+    Production Unit, etc.) and pass it to the
+    Correlation Agent for investigation.
 
     """)
 
@@ -1249,19 +1262,27 @@ Higher Dwell Time
 Production Reduction
 """)
     conclusion = f"""
-The investigation indicates that the production reduction is likely due to a combination of manufacturing disruptions and downstream congestion.
+## Executive Correlation Summary
 
-Key observations:
+The investigation indicates that the production reduction is not the result of a single event but a combination of operational factors.
 
-• Production changed by {production_change:.2f}%
+### Cross-Agent Evidence
 
-• {event_count} High/Critical events occurred
+• Production changed by **{production_change:.2f}%**
 
-• Highest inventory accumulated before {highest_process}
+• **{event_count}** High/Critical manufacturing events occurred during the investigation period.
 
-• {blocked_coils} blocked coils exceeded the dwell threshold
+• Highest inventory accumulated before **{highest_process}**, indicating downstream congestion.
 
-Overall, inventory build-up and abnormal dwell time appear to have contributed to reduced production throughput.
+• **{blocked_coils}** active coils exceeded the dwell threshold, suggesting delayed material movement.
+
+### Executive Assessment
+
+The combined evidence suggests that manufacturing disruptions resulted in downstream inventory build-up and increased waiting time, ultimately reducing production throughput.
+
+### Future Enhancement
+
+In the next version, the Correlation Agent will automatically identify the most affected business dimension (Grade, Route, Customer, Order, Width, Thickness, Production Unit, etc.) and correlate it with inventory, events and process bottlenecks to determine the most probable root cause automatically.
 """
 
     st.success(conclusion)
