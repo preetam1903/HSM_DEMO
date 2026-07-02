@@ -1126,6 +1126,33 @@ Higher Dwell Time
           ▼
 Production Reduction
 """)
+    conclusion = f"""
+The investigation indicates that the production reduction is likely due to a combination of manufacturing disruptions and downstream congestion.
+
+Key observations:
+
+• Production changed by {production_change:.2f}%
+
+• {event_count} High/Critical events occurred
+
+• Highest inventory accumulated before {highest_process}
+
+• {blocked_coils} blocked coils exceeded the dwell threshold
+
+Overall, inventory build-up and abnormal dwell time appear to have contributed to reduced production throughput.
+"""
+
+    st.success(conclusion)
+
+    return {
+
+        "confidence": confidence,
+
+        "summary": conclusion,
+
+        "reasons": reasons
+
+    }
 
 # ==========================================================
 # EXECUTIVE SUMMARY AGENT
@@ -1271,10 +1298,10 @@ if st.button("Investigate"):
 
     st.divider()
 
-    st.subheader("🧠 Investigation Planner")
+    #st.subheader("🧠 Investigation Planner")
 
-    st.write(f"**Intent :** {plan['intent']}")
-    st.write(f"**Primary KPI :** {plan['primary_kpi']}")
+    #st.write(f"**Intent :** {plan['intent']}")
+    #st.write(f"**Primary KPI :** {plan['primary_kpi']}")
 
     st.write("### Investigation Progress")
 
