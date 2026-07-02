@@ -666,141 +666,220 @@ Estimated Production Loss :
 # ==========================================================
 # INVENTORY AGENT
 # ==========================================================
+
 # ==========================================================
 # INVENTORY AGENT
 # ==========================================================
 
-def inventory_agent(inventory_df, plan):
+def inventory_agent(inventory_df, coil_df, plan):
 
     st.subheader("📦 Inventory Agent")
 
     status = st.empty()
-    status.info("Analysing inventory trend...")
+    status.info("Analysing inventory and blocked coils...")
 
-    df = inventory_df.copy()
+    inv = inventory_df.copy()
+    coils = coil_df.copy()
 
-    df["DATE"] = pd.to_datetime(df["DATE"])
+    inv["DATE"] = pd.to_datetime(inv["DATE"])
+    coils["PROD_DATE"] = pd.to_datetime(coils["PROD_DATE"])
 
-    df["WEEK_NO"] = (
-        df["DATE"]
-        .dt.isocalendar()
-        .week
-        .astype(int)
-    )
+    inv["WEEK_NO"] = inv["DATE"].dt.isocalendar().week.astype(int)
+    coils["WEEK_NO"] = coils["PROD_DATE"].dt.isocalendar().week.astype(int)
 
-    # -----------------------------------------
+    # --------------------------------------------------
     # Investigation Weeks
-    # -----------------------------------------
+    # --------------------------------------------------
 
     if len(plan["weeks"]) > 0:
 
-        df = df[
-            df["WEEK_NO"].isin(plan["weeks"])
+        inv = inv[
+            inv["WEEK_NO"].isin(plan["weeks"])
         ]
 
-    status.success("Inventory trend prepared")
+        coils = coils[
+            coils["WEEK_NO"].isin(plan["weeks"])
+        ]
 
-    st.write("### Generated Pandas Query")
+    status.success("Relevant inventory identified")
 
-    st.code("""
-inventory_df["WEEK_NO"]=pd.to_datetime(
-    inventory_df["DATE"]
-).dt.isocalendar().week
+    # --------------------------------------------------
+    # Inventory Trend
+    # --------------------------------------------------
 
-inventory=(
-inventory_df[
-inventory_df["WEEK_NO"].isin(selected_weeks)
-]
-.groupby(["WEEK_NO","PROCESS"])
-.sum()
-)
-""")
-
-    # -----------------------------------------
-    # Weekly Inventory
-    # -----------------------------------------
+    st.write("### Inventory Trend")
 
     inventory = (
-        df.groupby(
+
+        inv.groupby(
             ["WEEK_NO","PROCESS"]
         )
+
         .agg(
 
             Total_Coils=("TOTAL_COILS","sum"),
 
             Active_Coils=("ACTIVE_COILS","sum"),
 
-            High_Priority=("HIGH_PRIORITY_COILS","sum"),
+            HighPriority=("HIGH_PRIORITY_COILS","sum"),
 
             Avg_Dwell=("AVG_DWELL_DAYS","mean")
 
         )
+
         .reset_index()
 
-        .sort_values(
-            ["PROCESS","WEEK_NO"]
-        )
     )
-
-    st.write("### Inventory Trend")
 
     st.dataframe(
         inventory,
         use_container_width=True
     )
 
-    st.write("### Inventory Trend Chart")
+    # --------------------------------------------------
+    # High Priority Trend
+    # --------------------------------------------------
 
-    chart = (
-        inventory
-        .pivot(
-            index="WEEK_NO",
-            columns="PROCESS",
-            values="Total_Coils"
+    st.write("### High Priority Coils")
+
+    hp = (
+
+        inventory.groupby("WEEK_NO")
+
+        .agg(
+            HighPriority=("HighPriority","sum")
         )
+
+        .reset_index()
+
     )
 
-    st.line_chart(chart)
+    st.dataframe(
+        hp,
+        use_container_width=True
+    )
 
-    # -----------------------------------------
+    st.line_chart(
+
+        hp.set_index("WEEK_NO")["HighPriority"]
+
+    )
+
+    # --------------------------------------------------
+    # Blocked Coils
+    # --------------------------------------------------
+
+    blocked = coils[
+
+        (coils["COIL_STATUS"]=="ACTIVE")
+
+        &
+
+        (coils["DWELL_DAYS"]>5)
+
+    ]
+
+    blocked_summary = (
+
+        blocked.groupby("NEXT_INSTALLATION")
+
+        .agg(
+
+            Blocked_Coils=("MAT_ID","count"),
+
+            Average_Dwell=("DWELL_DAYS","mean"),
+
+            Maximum_Dwell=("DWELL_DAYS","max")
+
+        )
+
+        .reset_index()
+
+    )
+
+    st.write("### Blocked / Waiting Coils")
+
+    st.dataframe(
+
+        blocked_summary,
+
+        use_container_width=True
+
+    )
+
+    with st.expander("View Blocked Coils"):
+
+        st.dataframe(
+
+            blocked[
+
+                [
+
+                    "MAT_ID",
+
+                    "GRADE",
+
+                    "NEXT_INSTALLATION",
+
+                    "DWELL_DAYS",
+
+                    "COIL_STATUS"
+
+                ]
+
+            ],
+
+            use_container_width=True
+
+        )
+
+    # --------------------------------------------------
     # Highest Inventory
-    # -----------------------------------------
-
-    latest_week = inventory["WEEK_NO"].max()
+    # --------------------------------------------------
 
     latest = inventory[
-        inventory["WEEK_NO"]==latest_week
+
+        inventory["WEEK_NO"]==inventory["WEEK_NO"].max()
+
     ]
 
     highest = latest.loc[
+
         latest["Total_Coils"].idxmax()
+
     ]
 
     st.success(f"""
-Highest inventory during investigation period
 
-**Process : {highest['PROCESS']}**
+Highest Inventory Process
 
-Total Coils : **{int(highest['Total_Coils'])}**
+**{highest['PROCESS']}**
 
-Active Coils : **{int(highest['Active_Coils'])}**
+Inventory : **{int(highest['Total_Coils'])} coils**
 
-High Priority Coils : **{int(highest['High_Priority'])}**
+High Priority : **{int(highest['HighPriority'])} coils**
 
-Average Dwell : **{highest['Avg_Dwell']:.2f} Days**
+Blocked Coils : **{len(blocked)}**
 
-Possible downstream congestion detected.
+Possible downstream congestion before
+
+**{highest['PROCESS']}**
+
 """)
 
     return {
 
-        "inventory": inventory,
+        "inventory":inventory,
 
-        "highest_process": highest["PROCESS"],
+        "highest_process":highest["PROCESS"],
 
-        "highest_inventory": int(
-            highest["Total_Coils"]
-        )
+        "highest_inventory":int(highest["Total_Coils"]),
+
+        "blocked":blocked,
+
+        "blocked_count":len(blocked),
+
+        "high_priority":hp
 
     }
 
@@ -893,6 +972,232 @@ No abnormal dwell time detected.
 
     return abnormal
 
+# ==========================================================
+# CORRELATION AGENT
+# ==========================================================
+
+def correlation_agent(
+    trend_result,
+    event_result,
+    inventory_result,
+    dwell_result
+):
+
+    st.subheader("🔗 Correlation Agent")
+
+    st.info("Correlating findings from all investigation agents...")
+
+    production_change = trend_result["overall_change"]
+
+    event_count = event_result["count"]
+
+    lost_coils = event_result["lost_coils"]
+
+    highest_process = inventory_result["highest_process"]
+
+    highest_inventory = inventory_result["highest_inventory"]
+
+    blocked_coils = len(dwell_result)
+
+    confidence = 70
+
+    reasons = []
+
+    # ---------------------------------------------------
+    # Trend
+    # ---------------------------------------------------
+
+    if production_change < 0:
+
+        confidence += 5
+
+        reasons.append(
+            f"Production reduced by {abs(production_change):.2f}%."
+        )
+
+    # ---------------------------------------------------
+    # Events
+    # ---------------------------------------------------
+
+    if event_count > 0:
+
+        confidence += 5
+
+        reasons.append(
+            f"{event_count} High/Critical manufacturing events were detected resulting in an estimated loss of {int(lost_coils)} coils."
+        )
+
+    # ---------------------------------------------------
+    # Inventory
+    # ---------------------------------------------------
+
+    confidence += 5
+
+    reasons.append(
+        f"Highest inventory accumulated before {highest_process} ({highest_inventory} coils)."
+    )
+
+    # ---------------------------------------------------
+    # Blocked Coils
+    # ---------------------------------------------------
+
+    if blocked_coils > 0:
+
+        confidence += 5
+
+        reasons.append(
+            f"{blocked_coils} coils exceeded the dwell threshold and remained active."
+        )
+
+    confidence = min(confidence,95)
+
+    st.write("### Cross-Agent Evidence")
+
+    for r in reasons:
+
+        st.success(r)
+
+    st.write("### AI Correlation")
+
+    st.markdown("""
+text
+Maintenance / Breakdown
+          │
+          ▼
+Inventory Build-up
+          │
+          ▼
+Higher Dwell Time
+          │
+          ▼
+Production Reduction
+""")
+
+# ==========================================================
+# EXECUTIVE SUMMARY AGENT
+# ==========================================================
+
+def executive_summary_agent(
+
+    plan,
+
+    trend_result,
+
+    event_result,
+
+    inventory_result,
+
+    correlation_result
+
+):
+
+    st.subheader("👔 Executive Summary")
+
+    st.success("Executive investigation completed")
+
+    st.write("## Executive Question")
+
+    st.info(plan["question"])
+
+    st.write("## Investigation Result")
+
+    production_change = trend_result["overall_change"]
+
+    if production_change < 0:
+
+        answer = f"""
+Production reduced by **{abs(production_change):.2f}%**
+during the investigation period.
+"""
+
+    else:
+
+        answer = f"""
+Production increased by **{production_change:.2f}%**
+during the investigation period.
+"""
+
+    st.success(answer)
+
+    st.write("## Key Findings")
+
+    c1,c2 = st.columns(2)
+
+    with c1:
+
+        st.metric(
+            "Critical Events",
+            event_result["count"]
+        )
+
+        st.metric(
+            "Estimated Lost Coils",
+            int(event_result["lost_coils"])
+        )
+
+    with c2:
+
+        st.metric(
+            "Blocked Coils",
+            inventory_result["blocked_count"]
+        )
+
+        st.metric(
+            "Highest Inventory",
+            inventory_result["highest_process"]
+        )
+
+    st.write("## AI Investigation Summary")
+
+    st.info(correlation_result["summary"])
+
+    st.write("## Business Recommendation")
+
+    recommendations=[]
+
+    if event_result["count"]>0:
+
+        recommendations.append(
+            "• Review maintenance and breakdown history."
+        )
+
+    if inventory_result["blocked_count"]>0:
+
+        recommendations.append(
+            "• Clear blocked coils before downstream processing."
+        )
+
+    recommendations.append(
+        f"• Reduce inventory before {inventory_result['highest_process']}."
+    )
+
+    recommendations.append(
+        "• Review production sequencing for high priority coils."
+    )
+
+    recommendations.append(
+        "• Continue monitoring dwell time daily."
+    )
+
+    for r in recommendations:
+
+        st.write(r)
+
+    st.write("## Confidence")
+
+    st.progress(
+        correlation_result["confidence"]/100
+    )
+
+    st.success(
+        f"""
+Overall Investigation Confidence
+
+**{correlation_result['confidence']}%**
+"""
+    )
+
+    st.balloons()
 
 # ==========================================================
 # ASK EXECUTIVE
@@ -948,10 +1253,41 @@ if st.button("Investigate"):
                 event_result = event_agent(events_df,plan)
 
             elif agent == "Inventory Agent":
-                inventory_result = inventory_agent(inventory_df,plan)
+                inventory_result = inventory_agent(inventory_df,coil_df,plan)
 
             elif agent == "Dwell Agent":
-                dwell_agent(coil_df)
+
+                dwell_result = dwell_agent(coil_df,plan)
+
+            elif agent == "Correlation Agent":
+
+                correlation_result = correlation_agent(
+
+                    trend_result,
+
+                    event_result,
+
+                    inventory_result,
+
+                    dwell_result
+
+                )
+
+            elif agent == "Executive Summary Agent":
+
+                executive_summary_agent(
+
+                    plan,
+
+                    trend_result,
+
+                    event_result,
+
+                    inventory_result,
+
+                    correlation_result
+
+                )
 
             
                 
