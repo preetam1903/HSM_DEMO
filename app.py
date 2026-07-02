@@ -225,26 +225,7 @@ st.divider()
 
 #######################
 
-st.subheader("📈 Executive Production Trend")
 
-trend = coil_df.copy()
-
-trend["WEEK_NO"] = (
-    pd.to_datetime(trend["PROD_DATE"])
-    .dt.isocalendar()
-    .week
-    .astype(int)
-)
-
-production = (
-    trend.groupby("WEEK_NO")
-    .size()
-    .reset_index(name="Production")
-)
-
-st.line_chart(
-    production.set_index("WEEK_NO")["Production"]
-)
 
 # ==========================================================
 # PLANNER AGENT
@@ -345,11 +326,40 @@ def planner_agent(question):
 
     else:
 
-        plan["agents"] = [
+        # ---------------------------------------------
+# Investigation Questions
+# ---------------------------------------------
 
-            "Data Query Agent"
+if any(word in q for word in investigation_words):
 
-        ]
+    plan["intent"] = "Investigation"
+
+    plan["agents"] = [
+
+        "Planner Agent",
+        "Context Agent",
+        "Trend Agent",
+        "Event Agent",
+        "Inventory Agent",
+        "Dwell Agent",
+        "Correlation Agent",
+        "Executive Summary Agent"
+
+    ]
+
+# ---------------------------------------------
+# Simple Analysis Questions
+# ---------------------------------------------
+
+else:
+
+    plan["intent"] = "Analysis"
+
+    plan["agents"] = [
+
+        "Trend Agent"
+
+    ]
 
     return plan
 
