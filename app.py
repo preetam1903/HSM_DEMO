@@ -1285,7 +1285,18 @@ The combined evidence suggests that manufacturing disruptions resulted in downst
 In the next version, the Correlation Agent will automatically identify the most affected business dimension (Grade, Route, Customer, Order, Width, Thickness, Production Unit, etc.) and correlate it with inventory, events and process bottlenecks to determine the most probable root cause automatically.
 """
 
-    st.success(conclusion)
+    st.success("""
+    Correlation completed successfully.
+
+    The Correlation Agent has combined evidence from:
+
+    • Trend Analysis
+    • Manufacturing Events
+    • Inventory Analysis
+    • Dwell Time Analysis
+
+    The final business conclusion has been forwarded to the Executive Summary Agent.
+    """)
 
     return {
 
