@@ -1432,6 +1432,105 @@ Overall Investigation Confidence
 """
     )
 
+    # ==========================================================
+# INVESTIGATION EXPLORER
+# ==========================================================
+
+    st.divider()
+
+    st.subheader("🔍 Investigation Explorer")
+
+    explore = st.selectbox(
+
+        "Explore the investigation further",
+
+        [
+
+            "Select...",
+
+            "Which type of coils had piled up?",
+
+            "Which next installation has the highest queue?",
+
+            "Show the longest waiting coils",
+
+            "Which manufacturing events caused maximum production loss?",
+
+            "What additional data would improve this investigation?"
+
+        ],
+
+        key="explorer"
+
+    )
+
+    if explore != "Select...":
+            # --------------------------------------------------
+    # Piled-up Coils
+    # --------------------------------------------------
+
+        if explore == "Which type of coils had piled up?":
+
+            st.write("### Generated Pandas Query")
+
+            st.code("""
+    blocked = coil_df[
+        (coil_df["COIL_STATUS"]=="ACTIVE") &
+        (coil_df["DWELL_DAYS"]>5)
+    ]
+
+    blocked.groupby("GRADE").agg(
+        Blocked_Coils=("MAT_ID","count"),
+        Average_Dwell=("DWELL_DAYS","mean")
+    )
+    """)
+
+            blocked = coil_df[
+                (coil_df["COIL_STATUS"]=="ACTIVE")
+                &
+                (coil_df["DWELL_DAYS"]>5)
+            ]
+
+            result = (
+
+                blocked
+
+                .groupby("GRADE")
+
+                .agg(
+
+                    Blocked_Coils=("MAT_ID","count"),
+    
+                    Average_Dwell=("DWELL_DAYS","mean")
+
+                )
+
+                .sort_values(
+
+                    "Blocked_Coils",
+
+                    ascending=False
+
+                )
+
+            )
+
+            st.dataframe(
+
+                result,
+
+                use_container_width=True
+
+            )
+
+            top = result.index[0]
+
+            st.success(
+
+                f"The highest inventory build-up occurred for Grade **{top}**."
+
+            )
+
     
 
 # ==========================================================
