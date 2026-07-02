@@ -551,51 +551,105 @@ weekly = (
         use_container_width=True
     )
 
-    # ---------------------------------------
-# Production by Grade
+# ---------------------------------------
+# Production Trend by Grade
 # ---------------------------------------
 
-    st.write("### Production by Grade")
+    st.write("### Production Trend by Grade")
 
-    grade_summary = (
+    grade_week = (
 
-        df.groupby("GRADE")
+        df.groupby(["GRADE","WEEK_NO"])
 
         .agg(
 
-            Production=("MAT_ID", "count"),
-
-            Tonnage=("COIL_WEIGHT_TON", "sum")
+            Production=("MAT_ID","count")
 
         )
 
         .reset_index()
 
+    )
+
+    pivot = (
+
+        grade_week
+
+        .pivot(
+
+            index="GRADE",
+
+            columns="WEEK_NO",
+
+            values="Production"
+
+        )
+
+        .fillna(0)
+
+    )
+
+    weeks = sorted(df["WEEK_NO"].unique())
+
+    if len(weeks) >= 2:
+
+        first_week = weeks[0]
+
+        last_week = weeks[-1]
+
+        pivot["Change %"] = (
+
+            (
+                pivot[last_week] -
+                pivot[first_week]
+            )
+
+            / pivot[first_week].replace(0,1)
+
+        ) * 100
+
+    else:
+
+        pivot["Change %"] = 0
+
+    pivot = (
+
+        pivot
+
         .sort_values(
-            "Production",
-            ascending=False
+
+            "Change %"
+
         )
 
     )
 
     st.dataframe(
-        grade_summary,
+
+        pivot.round(1),
+
         use_container_width=True
+
     )
 
-    st.bar_chart(
-        grade_summary.set_index("GRADE")["Production"]
-    )
+    worst_grade = pivot.index[0]
 
-    top_grade = grade_summary.iloc[0]
+    worst_change = pivot.iloc[0]["Change %"]
 
-    st.success(f"""
-    Highest production was for **{top_grade['GRADE']}**
+    st.error(f"""
 
-    Production : **{int(top_grade['Production'])} coils**
+    Largest production reduction
+    
+    Grade : **{worst_grade}**
+    
+    Reduction : **{abs(worst_change):.1f}%**
 
-    Tonnage : **{top_grade['Tonnage']:.2f} Tons**
+    This grade will be investigated further
+    across Inventory, Dwell and Events.
+
     """)
+
+    
 
     # ---------------------------------------
     # Trend Chart
@@ -668,7 +722,10 @@ during the investigation period.
 
         "overall_change": overall,
 
-        "finding": finding
+        "finding": finding,
+        "worst_grade": worst_grade,
+
+        "worst_grade_change": worst_change
 
     }
 
