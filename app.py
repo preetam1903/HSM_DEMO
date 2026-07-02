@@ -403,35 +403,35 @@ def context_agent(plan):
 # AGENT STATUS CARD
 # ==========================================================
 
-
-
 # ==========================================================
 # AGENT STATUS CARD
 # ==========================================================
 
 def show_agent(agent_name, status="Waiting"):
 
-    if status == "Waiting":
-        color = "#1e3a8a"
-        icon = "⚪"
+    if status == "Running":
 
-    elif status == "Running":
-        color = "#ca8a04"
+        css = "runningAgent"
         icon = "🟡"
 
-    else:
-        color = "#166534"
+    elif status == "Completed":
+
+        css = "successAgent"
         icon = "✅"
+
+    else:
+
+        css = "runningAgent"
+        icon = "⚪"
 
     st.markdown(
         f"""
-    <div class="{css}">
-    <h4>{icon} {agent_name}</h4>
-    </div>
-    """,
-    unsafe_allow_html=True
+        <div class="{css}">
+            <h4 style="margin:0;">{icon} {agent_name}</h4>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
-###########################
 
 # ==========================================================
 # TREND AGENT
