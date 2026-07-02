@@ -180,8 +180,7 @@ kpi_df,
 relationship_df,
 playbook_df
 )=load_data()
-st.write("COIL_OPERATION_FACT Columns")
-st.write(coil_df.columns.tolist())
+
 # ==========================================================
 # KPI CARDS
 # ==========================================================
@@ -223,6 +222,29 @@ with c4:
     )
 
 st.divider()
+
+#######################
+
+st.subheader("📈 Executive Production Trend")
+
+trend = coil_df.copy()
+
+trend["WEEK_NO"] = (
+    pd.to_datetime(trend["PROD_DATE"])
+    .dt.isocalendar()
+    .week
+    .astype(int)
+)
+
+production = (
+    trend.groupby("WEEK_NO")
+    .size()
+    .reset_index(name="Production")
+)
+
+st.line_chart(
+    production.set_index("WEEK_NO")["Production"]
+)
 
 # ==========================================================
 # PLANNER AGENT
