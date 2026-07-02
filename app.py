@@ -38,29 +38,27 @@ div[data-testid="metric-container"]{
     background:white;
     border-radius:12px;
     padding:18px;
-    border:1px solid #e5e7eb;
+    border:2px solid black;
     box-shadow:0 2px 8px rgba(0,0,0,0.08);
 }
 
 /* Buttons */
 
 .stButton>button{
+
     background:#2563eb;
+
+    border:2px solid black;
+
     color:white;
-    border:none;
-    border-radius:8px;
-    font-weight:bold;
-    height:45px;
-    width:180px;
-}
 
 /* Running Agent */
 
 .runningAgent{
 
-    background:#fff7ed;
+    background:white;
 
-    border-left:6px solid #f59e0b;
+    border:2px solid black;
 
     padding:16px;
 
@@ -74,9 +72,9 @@ div[data-testid="metric-container"]{
 
 .successAgent{
 
-    background:#ecfdf5;
+    background:white;
 
-    border-left:6px solid #10b981;
+    border:2px solid black;
 
     padding:16px;
 
@@ -92,6 +90,8 @@ div[data-testid="metric-container"]{
 
     background:white;
 
+    border:2px solid black;
+
     border-radius:10px;
 
 }
@@ -102,13 +102,19 @@ div[data-testid="metric-container"]{
 
     background:white;
 
+    border:2px solid black;
+
 }
 
-/* Expanders */
+details{
 
-.streamlit-expanderHeader{
+    border:2px solid black;
 
-    font-weight:600;
+    border-radius:8px;
+
+    background:white;
+
+    padding:6px;
 
 }
 
