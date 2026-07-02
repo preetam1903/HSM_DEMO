@@ -1397,16 +1397,28 @@ if st.button("Investigate"):
 
 st.divider()
 
-st.subheader("📚 Manufacturing Knowledge Repository")
+###############
+# ==========================================================
+# DATASETS
+# ==========================================================
+
+st.divider()
+
+st.header("📚 Manufacturing Data Repository")
+
+# ---------------------------------------------------------
 
 with st.expander("COIL_OPERATION_FACT.xlsx", expanded=False):
 
     st.markdown("""
 ### Purpose
-Primary operational dataset containing one record per manufactured coil.
+Primary manufacturing dataset.
 
 ### Grain
-**One row = One Coil**
+One row = One Coil
+
+### Used By
+Trend Agent, Inventory Agent, Dwell Agent
 
 ### Key Information
 - Coil ID
@@ -1415,161 +1427,115 @@ Primary operational dataset containing one record per manufactured coil.
 - Width
 - Thickness
 - Weight
+- Route
 - Current Status
 - Next Installation
 - Dwell Days
-- Route
-- Production Unit
-
-### Used By
-- Trend Agent
-- Dwell Agent
-- Inventory Agent
-- Correlation Agent
-
-### Supports Analysis
-- Production trend
-- Coil level investigation
-- Blocked coils
-- Waiting coils
-- Dwell analysis
-- Throughput analysis
 """)
 
-with st.expander("INVENTORY_SNAPSHOT.xlsx", expanded=False):
+    st.dataframe(
+        coil_df.head(20),
+        use_container_width=True
+    )
+
+# ---------------------------------------------------------
+
+with st.expander("INVENTORY_SNAPSHOT.xlsx"):
 
     st.markdown("""
 ### Purpose
-Daily inventory snapshot across manufacturing processes.
+Inventory snapshot.
 
 ### Grain
-**One row = One Process per Day**
-
-### Key Information
-- Process
-- Total Coils
-- Active Coils
-- High Priority Coils
-- Total Tonnage
-- Average Dwell
-- Maximum Dwell
-- Available Capacity
+One row = One Process per Day
 
 ### Used By
-- Inventory Agent
-- Correlation Agent
-
-### Supports Analysis
-- Inventory build-up
-- High priority workload
-- Capacity utilisation
-- Congestion detection
+Inventory Agent
+Correlation Agent
 """)
 
-with st.expander("MANUFACTURING_EVENTS.xlsx", expanded=False):
+    st.dataframe(
+        inventory_df.head(20),
+        use_container_width=True
+    )
+
+# ---------------------------------------------------------
+
+with st.expander("MANUFACTURING_EVENTS.xlsx"):
 
     st.markdown("""
 ### Purpose
-Manufacturing disruptions and operational events.
+Manufacturing Events
 
 ### Grain
-**One row = One Manufacturing Event**
-
-### Key Information
-- Event Date
-- Area
-- Equipment
-- Event Type
-- Severity
-- Root Cause
-- Estimated Lost Coils
-- Duration
+One row = One Event
 
 ### Used By
-- Event Agent
-- Correlation Agent
-- Executive Summary
-
-### Supports Analysis
-- Maintenance impact
-- Breakdowns
-- Production loss
-- Root cause investigation
+Event Agent
+Correlation Agent
 """)
 
-with st.expander("KPI_METADATA.xlsx", expanded=False):
+    st.dataframe(
+        events_df.head(20),
+        use_container_width=True
+    )
+
+# ---------------------------------------------------------
+
+with st.expander("KPI_METADATA.xlsx"):
 
     st.markdown("""
 ### Purpose
-Business definition of KPIs.
+Business KPI definitions
 
 ### Grain
-**One row = One KPI**
-
-### Key Information
-- KPI Name
-- Definition
-- Unit
-- Threshold
-- Aggregation
-- Business Owner
+One row = One KPI
 
 ### Used By
-- Future Metadata Driven Investigation
-
-### Supports Analysis
-- KPI interpretation
-- Threshold validation
-- Business rules
+Future Metadata Driven Copilot
 """)
 
-with st.expander("KPI_RELATIONSHIPS.xlsx", expanded=False):
+    st.dataframe(
+        kpi_df,
+        use_container_width=True
+    )
+
+# ---------------------------------------------------------
+
+with st.expander("KPI_RELATIONSHIPS.xlsx"):
 
     st.markdown("""
 ### Purpose
-Relationship between manufacturing KPIs.
+Relationship between KPIs
 
 ### Grain
-**One row = One KPI Relationship**
-
-### Key Information
-- Source KPI
-- Target KPI
-- Relationship
-- Business Explanation
+One row = One KPI Relationship
 
 ### Used By
-- Correlation Agent
-
-### Supports Analysis
-- Root cause analysis
-- Impact propagation
-- AI reasoning
+Correlation Agent
 """)
 
-with st.expander("INVESTIGATION_PLAYBOOK.xlsx", expanded=False):
+    st.dataframe(
+        relationship_df,
+        use_container_width=True
+    )
+
+# ---------------------------------------------------------
+
+with st.expander("INVESTIGATION_PLAYBOOK.xlsx"):
 
     st.markdown("""
 ### Purpose
-Executive investigation playbooks.
+Executive Investigation Rules
 
 ### Grain
-**One row = One Investigation Rule**
-
-### Key Information
-- Investigation Scenario
-- Trigger KPI
-- Recommended Agents
-- Investigation Steps
+One row = One Investigation Scenario
 
 ### Used By
-- Planner Agent (Future)
-
-### Supports Analysis
-- Investigation planning
-- Agent orchestration
-- Standard operating procedures
+Planner Agent
 """)
-        
 
-    
+    st.dataframe(
+        playbook_df,
+        use_container_width=True
+    )
