@@ -1284,7 +1284,7 @@ Overall Investigation Confidence
 """
     )
 
-    st.balloons()
+    
 
 # ==========================================================
 # ASK EXECUTIVE
@@ -1380,6 +1380,183 @@ if st.button("Investigate"):
                 
 
             show_agent(f"{agent} Completed", "Completed")
+
+
+st.divider()
+
+st.subheader("📚 Manufacturing Knowledge Repository")
+
+with st.expander("COIL_OPERATION_FACT.xlsx", expanded=False):
+
+    st.markdown("""
+### Purpose
+Primary operational dataset containing one record per manufactured coil.
+
+### Grain
+**One row = One Coil**
+
+### Key Information
+- Coil ID
+- Production Date
+- Grade
+- Width
+- Thickness
+- Weight
+- Current Status
+- Next Installation
+- Dwell Days
+- Route
+- Production Unit
+
+### Used By
+- Trend Agent
+- Dwell Agent
+- Inventory Agent
+- Correlation Agent
+
+### Supports Analysis
+- Production trend
+- Coil level investigation
+- Blocked coils
+- Waiting coils
+- Dwell analysis
+- Throughput analysis
+""")
+
+with st.expander("INVENTORY_SNAPSHOT.xlsx", expanded=False):
+
+    st.markdown("""
+### Purpose
+Daily inventory snapshot across manufacturing processes.
+
+### Grain
+**One row = One Process per Day**
+
+### Key Information
+- Process
+- Total Coils
+- Active Coils
+- High Priority Coils
+- Total Tonnage
+- Average Dwell
+- Maximum Dwell
+- Available Capacity
+
+### Used By
+- Inventory Agent
+- Correlation Agent
+
+### Supports Analysis
+- Inventory build-up
+- High priority workload
+- Capacity utilisation
+- Congestion detection
+""")
+
+with st.expander("MANUFACTURING_EVENTS.xlsx", expanded=False):
+
+    st.markdown("""
+### Purpose
+Manufacturing disruptions and operational events.
+
+### Grain
+**One row = One Manufacturing Event**
+
+### Key Information
+- Event Date
+- Area
+- Equipment
+- Event Type
+- Severity
+- Root Cause
+- Estimated Lost Coils
+- Duration
+
+### Used By
+- Event Agent
+- Correlation Agent
+- Executive Summary
+
+### Supports Analysis
+- Maintenance impact
+- Breakdowns
+- Production loss
+- Root cause investigation
+""")
+
+with st.expander("KPI_METADATA.xlsx", expanded=False):
+
+    st.markdown("""
+### Purpose
+Business definition of KPIs.
+
+### Grain
+**One row = One KPI**
+
+### Key Information
+- KPI Name
+- Definition
+- Unit
+- Threshold
+- Aggregation
+- Business Owner
+
+### Used By
+- Future Metadata Driven Investigation
+
+### Supports Analysis
+- KPI interpretation
+- Threshold validation
+- Business rules
+""")
+
+with st.expander("KPI_RELATIONSHIPS.xlsx", expanded=False):
+
+    st.markdown("""
+### Purpose
+Relationship between manufacturing KPIs.
+
+### Grain
+**One row = One KPI Relationship**
+
+### Key Information
+- Source KPI
+- Target KPI
+- Relationship
+- Business Explanation
+
+### Used By
+- Correlation Agent
+
+### Supports Analysis
+- Root cause analysis
+- Impact propagation
+- AI reasoning
+""")
+
+with st.expander("INVESTIGATION_PLAYBOOK.xlsx", expanded=False):
+
+    st.markdown("""
+### Purpose
+Executive investigation playbooks.
+
+### Grain
+**One row = One Investigation Rule**
+
+### Key Information
+- Investigation Scenario
+- Trigger KPI
+- Recommended Agents
+- Investigation Steps
+
+### Used By
+- Planner Agent (Future)
+
+### Supports Analysis
+- Investigation planning
+- Agent orchestration
+- Standard operating procedures
+""")
         
 
     
